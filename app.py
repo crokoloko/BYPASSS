@@ -11,43 +11,38 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- NUOVO STILE CSS FLUIDO & MORBIDO (SMOOTH NEON STREET) ---
+# --- STILE CSS FLUIDO & MORBIDO (SMOOTH NEON STREET) ---
 st.markdown("""
 <style>
-    /* Font globale più pulito e moderno */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap');
     
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
     }
     
-    /* Sfondo principale con leggero gradiente profondo */
     .stApp {
         background: linear-gradient(135deg, #08090c 0%, #11131a 100%);
         color: #e0e2ec;
     }
     
-    /* Sidebar personalizzata e morbida */
     section[data-testid="stSidebar"] {
         background-color: #0d0f17 !important;
         border-right: 1px solid rgba(255, 42, 109, 0.15);
     }
     
-    /* Titoli ed Intestazioni: Font Mono con bagliore neon morbido */
     h1, h2, h3 {
         font-family: 'JetBrains Mono', monospace !important;
-        color: #ff2a6d !important; /* Rosa Neon Morbido */
+        color: #ff2a6d !important;
         text-shadow: 0 0 15px rgba(255, 42, 109, 0.4);
         font-weight: 800 !important;
         letter-spacing: -0.5px;
     }
     h4, h5 {
         font-family: 'JetBrains Mono', monospace !important;
-        color: #05d9e8 !important; /* Ciano Elettrico */
+        color: #05d9e8 !important;
         font-weight: 700 !important;
     }
 
-    /* Form ed Expander trasparenti tipo vetro (Glassmorphism) */
     div[data-testid="stExpander"], div[data-testid="stForm"] {
         background: rgba(20, 22, 34, 0.6) !important;
         border: 1px solid rgba(5, 217, 232, 0.2) !important;
@@ -62,7 +57,6 @@ st.markdown("""
         box-shadow: 0 8px 32px 0 rgba(5, 217, 232, 0.15) !important;
     }
 
-    /* Pulsanti ultra-fluidi con bagliore ed effetto sollevamento */
     div.stButton > button, div.stFormSubmitButton > button {
         background: linear-gradient(90deg, #161a26 0%, #1f2438 100%);
         color: #05d9e8;
@@ -86,7 +80,27 @@ st.markdown("""
         transform: translateY(0px);
     }
 
-    /* Campi di input e selezione più dolci */
+    /* Styling delle Metriche e Contatori Missioni */
+    div[data-testid="stMetricValue"] {
+        color: #05d9e8 !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        font-weight: 800 !important;
+        font-size: 1.8rem !important;
+        text-shadow: 0 0 10px rgba(5, 217, 232, 0.3);
+    }
+    div[data-testid="stMetricLabel"] {
+        color: #a0a6b8 !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+    }
+    div[data-testid="metric-container"] {
+        background: rgba(15, 17, 25, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+    }
+
     .stTextInput input, .stSelectbox div div, .stNumberInput input {
         background-color: #121520 !important;
         color: #ffffff !important;
@@ -98,14 +112,12 @@ st.markdown("""
         box-shadow: 0 0 10px rgba(255, 42, 109, 0.3) !important;
     }
 
-    /* Barre di avanzamento (Progress Bar) luminescenti */
     div[data-testid="stProgress"] > div > div > div > div {
         background: linear-gradient(90deg, #ff2a6d 0%, #05d9e8 100%) !important;
         box-shadow: 0 0 12px rgba(255, 42, 109, 0.5);
         border-radius: 10px;
     }
 
-    /* Card Badge e Notifiche con transizione morbida */
     .badge-unlocked {
         padding: 14px 18px;
         background: linear-gradient(135deg, rgba(255, 42, 109, 0.15) 0%, rgba(20, 22, 34, 0.8) 100%);
@@ -133,7 +145,6 @@ st.markdown("""
         opacity: 0.7;
     }
     
-    /* Nascondi elementi di sistema inutili per pulizia visiva */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 </style>
@@ -143,20 +154,23 @@ DB_FILE = "bypass_db.json"
 
 # --- DATABASE LOGIC ---
 def load_data():
+    default_data = {
+        "stats": {
+            "fisico": {"xp": 0, "level": 1, "last_active": str(date.today())},
+            "mente": {"xp": 0, "level": 1, "last_active": str(date.today())},
+            "skill": {"xp": 0, "level": 1, "last_active": str(date.today())},
+            "rep": {"xp": 0, "level": 1}
+        },
+        "mission_stats": {"totale": 0, "urgenti": 0, "grossi": 0, "lavoretti": 0},
+        "tasks": [],
+        "records": {},
+        "garage": [],
+        "bar_streak": 0,
+        "last_bar_check": str(date.today())
+    }
+    
     if not os.path.exists(DB_FILE):
-        return {
-            "stats": {
-                "fisico": {"xp": 0, "level": 1, "last_active": str(date.today())},
-                "mente": {"xp": 0, "level": 1, "last_active": str(date.today())},
-                "skill": {"xp": 0, "level": 1, "last_active": str(date.today())},
-                "rep": {"xp": 0, "level": 1}
-            },
-            "tasks": [],
-            "records": {},
-            "garage": [],
-            "bar_streak": 0,
-            "last_bar_check": str(date.today())
-        }
+        return default_data
     try:
         with open(DB_FILE, "r") as f:
             db = json.load(f)
@@ -164,27 +178,46 @@ def load_data():
             if "garage" not in db: db["garage"] = []
             if "bar_streak" not in db: db["bar_streak"] = 0
             if "last_bar_check" not in db: db["last_bar_check"] = str(date.today())
+            if "mission_stats" not in db: db["mission_stats"] = {"totale": 0, "urgenti": 0, "grossi": 0, "lavoretti": 0}
             return db
     except Exception:
-        return {
-            "stats": {
-                "fisico": {"xp": 0, "level": 1, "last_active": str(date.today())},
-                "mente": {"xp": 0, "level": 1, "last_active": str(date.today())},
-                "skill": {"xp": 0, "level": 1, "last_active": str(date.today())},
-                "rep": {"xp": 0, "level": 1}
-            },
-            "tasks": [],
-            "records": {},
-            "garage": [],
-            "bar_streak": 0,
-            "last_bar_check": str(date.today())
-        }
+        return default_data
 
 def save_data(data):
     with open(DB_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
 data = load_data()
+
+# --- LOGICA DEL DECADIMENTO (LA RUGGINE) ---
+def applica_decadimento(data):
+    today = date.today()
+    regole = {
+        "fisico": {"giorni": 3, "tasso": 0.05},
+        "mente": {"giorni": 4, "tasso": 0.04},
+        "skill": {"giorni": 5, "tasso": 0.03}
+    }
+    modificato = False
+    for stat_name, regola in regole.items():
+        last_active_str = data["stats"][stat_name].get("last_active", str(today))
+        try:
+            last_active_date = datetime.strptime(last_active_str, "%Y-%m-%d").date()
+            days_passed = (today - last_active_date).days
+            if days_passed > regola["giorni"]:
+                giorni_penalita = days_passed - regola["giorni"]
+                perdita = int(data["stats"][stat_name]["xp"] * (regola["tasso"] * giorni_penalita))
+                if perdita > 0:
+                    data["stats"][stat_name]["xp"] = max(0, data["stats"][stat_name]["xp"] - perdita)
+                    data["stats"][stat_name]["last_active"] = str(today)
+                    modificato = True
+        except Exception:
+            data["stats"][stat_name]["last_active"] = str(today)
+            modificato = True
+            
+    if modificato:
+        save_data(data)
+
+applica_decadimento(data)
 
 def aggiungi_xp(stat, quantita):
     if stat not in data["stats"]:
@@ -234,15 +267,19 @@ if scelta_menu == "📋 BACHECA MISSIONI":
     # Inserimento Missione
     with st.expander("➕ APRI TERMINALE: AGGIUNGI MISSIONE", expanded=False):
         with st.form("new_mission_form", clear_on_submit=True):
-            titolo = st.text_input("Nome della Missione (es. Pagare multa, Allenamento gambe)")
+            titolo = st.text_input("Nome della Missione (es. Pulire macchina, Pagare multa, Workout)")
             col_f1, col_f2 = st.columns(2)
             with col_f1:
-                tipo = st.selectbox("Tipologia", ["Scadenza URGENTE", "I Grossi (Priorità)", "Lavoretti (Secondari)"])
+                tipo = st.selectbox("Gravosità / Urgenza", [
+                    "Scadenza URGENTE (+40 XP)", 
+                    "I Grossi / Priorità (+30 XP)", 
+                    "Lavoretti / Routine (+15 XP)"
+                ])
             with col_f2:
                 stat = st.selectbox("Statistica potenziata", ["fisico", "mente", "skill"])
             
             scadenza = None
-            if tipo == "Scadenza URGENTE":
+            if "URGENTE" in tipo:
                 scadenza = st.date_input("Scade il:", min_value=date.today())
                 
             submit = st.form_submit_button("🔥 REGISTRA NEI SISTEMI")
@@ -254,7 +291,7 @@ if scelta_menu == "📋 BACHECA MISSIONI":
                     "tipo": tipo,
                     "stat": stat,
                     "scadenza": str(scadenza) if scadenza else None,
-                    "completata": False
+                    "completato": False
                 }
                 if "tasks" not in data:
                     data["tasks"] = []
@@ -272,22 +309,22 @@ if scelta_menu == "📋 BACHECA MISSIONI":
     if not attive:
         st.info("⚡ Nessuna missione attiva. Il sistema è pulito. Sei libero o è il momento di pianificare un nuovo colpo?")
     else:
-        scadenze = [t for t in attive if t.get("tipo") == "Scadenza URGENTE"]
+        scadenze = [t for t in attive if "URGENTE" in t.get("tipo", "")]
         scadenze.sort(key=lambda x: x.get("scadenza") if x.get("scadenza") else "9999-12-31")
         
-        grossi = [t for t in attive if t.get("tipo") == "I Grossi (Priorità)"]
-        lavoretti = [t for t in attive if t.get("tipo") == "Lavoretti (Secondari)"]
+        grossi = [t for t in attive if "Priorità" in t.get("tipo", "")]
+        lavoretti = [t for t in attive if "Routine" in t.get("tipo", "")]
         
         lista_ordinata = scadenze + grossi + lavoretti
 
         for task in lista_ordinata:
-            t_tipo = task.get("tipo", "Lavoretti (Secondari)")
+            t_tipo = task.get("tipo", "Lavoretti / Routine (+15 XP)")
             t_titolo = task.get("titolo", "Missione Senza Nome")
             t_scadenza = task.get("scadenza")
             t_id = task.get("id", 0)
             t_stat = task.get("stat", "mente")
             
-            if t_tipo == "Scadenza URGENTE" and t_scadenza:
+            if "URGENTE" in t_tipo and t_scadenza:
                 try:
                     scad_date = datetime.strptime(t_scadenza, "%Y-%m-%d").date()
                     giorni_rimasti = (scad_date - date.today()).days
@@ -298,17 +335,28 @@ if scelta_menu == "📋 BACHECA MISSIONI":
                 except Exception:
                     label = f"⏳ [SCADENZA] — {t_titolo}"
                 xp_reward = 40
-            elif t_tipo == "I Grossi (Priorità)":
+                categoria_stat = "urgenti"
+            elif "Priorità" in t_tipo:
                 label = f"🔴 [PRIORITÀ] — {t_titolo}"
                 xp_reward = 30
+                categoria_stat = "grossi"
             else:
-                label = f"⚪ [LAVORETTO] — {t_titolo}"
+                label = f"⚪ [ROUTINE] — {t_titolo}"
                 xp_reward = 15
+                categoria_stat = "lavoretti"
                 
             if st.checkbox(label, key=f"task_{t_id}"):
+                # Segna come completata e incrementa i contatori di missione
                 for t in data["tasks"]:
                     if t.get("id") == t_id:
                         t["completato"] = True
+                
+                if "mission_stats" not in data:
+                    data["mission_stats"] = {"totale": 0, "urgenti": 0, "grossi": 0, "lavoretti": 0}
+                
+                data["mission_stats"]["totale"] = data["mission_stats"].get("totale", 0) + 1
+                data["mission_stats"][categoria_stat] = data["mission_stats"].get(categoria_stat, 0) + 1
+                
                 save_data(data)
                 aggiungi_xp(t_stat, xp_reward)
                 st.toast(f"Completato! +{xp_reward} XP in {t_stat.upper()}", icon="⚡")
@@ -318,6 +366,17 @@ if scelta_menu == "📋 BACHECA MISSIONI":
 elif scelta_menu == "👤 PROFILO & STATS":
     st.title("👤 PROFILO UTENTE")
     st.markdown(f"#### STATUS GENERALE: `Livello {data['stats']['rep']['level']}`")
+    st.write("---")
+    
+    # CRUSCOTTO OPERATIVO (MISSION ANALYTICS)
+    st.markdown("### 📈 REGISTRO OPERATIVO (MISSION ANALYTICS)")
+    m_stats = data.get("mission_stats", {"totale": 0, "urgenti": 0, "grossi": 0, "lavoretti": 0})
+    
+    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+    col_m1.metric("🔥 Totale Svolte", m_stats.get("totale", 0))
+    col_m2.metric("⚠️ Scadenze", m_stats.get("urgenti", 0))
+    col_m3.metric("🔴 I Grossi", m_stats.get("grossi", 0))
+    col_m4.metric("⚪ Routine/Manut.", m_stats.get("lavoretti", 0))
     st.write("---")
     
     st.markdown("### 📊 PARAMETRI FISICI & MENTALI")
@@ -363,6 +422,7 @@ elif scelta_menu == "👤 PROFILO & STATS":
         {"nome": "Piede di Piombo", "desc": "Inserisci il tuo primo record personale sul cronometro.", "sbloccato": len(data["records"]) >= 1},
         {"nome": "Sotto i Radar", "desc": "Mantieni una scia di disciplina senza bar di 5 giorni.", "sbloccato": streak >= 5},
         {"nome": "Infiltrato Invisibile", "desc": "Raggiungi 14 giorni di fila senza micro-spese superflue.", "sbloccato": streak >= 14},
+        {"nome": "Macchina da Guerra", "desc": "Raggiungi quota 10 missioni totali portate a termine.", "sbloccato": m_stats.get("totale", 0) >= 10}
     ]
     
     for b in badge_list:
@@ -439,7 +499,7 @@ elif scelta_menu == "🚘 GARAGE & RISPARMI":
             with col_dep1:
                 deposito = st.number_input(f"Quota da depositare (€):", min_value=1, key=f"dep_val_{idx}")
             with col_dep2:
-                st.write("") # Spaziatore per allineare il bottone all'input
+                st.write("") 
                 if st.button("DEPOSITA", key=f"dep_btn_{idx}"):
                     item["risparmiati"] += deposito
                     save_data(data)
