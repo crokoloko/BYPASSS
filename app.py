@@ -43,18 +43,15 @@ st.markdown("""
         font-weight: 700 !important;
     }
 
-    div[data-testid="stExpander"], div[data-testid="stForm"] {
+    div[data-testid="stForm"] {
         background: rgba(20, 22, 34, 0.6) !important;
         border: 1px solid rgba(5, 217, 232, 0.2) !important;
         border-radius: 16px !important;
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
         backdrop-filter: blur(8px);
         padding: 10px;
+        margin-bottom: 20px;
         transition: all 0.3s ease-in-out;
-    }
-    div[data-testid="stExpander"]:hover {
-        border-color: rgba(5, 217, 232, 0.5) !important;
-        box-shadow: 0 8px 32px 0 rgba(5, 217, 232, 0.15) !important;
     }
 
     div.stButton > button, div.stFormSubmitButton > button {
@@ -78,6 +75,14 @@ st.markdown("""
     }
     div.stButton > button:active {
         transform: translateY(0px);
+    }
+    
+    /* Stile per il pulsante "+" minimal in alto a destra */
+    .btn-minimal > div > button {
+        padding: 0.2rem 0.5rem !important;
+        font-size: 1.2rem !important;
+        border-radius: 8px !important;
+        height: auto !important;
     }
 
     div[data-testid="stMetricValue"] {
@@ -151,7 +156,7 @@ st.markdown("""
 
 DB_FILE = "bypass_db.json"
 
-# --- DATABASE LOGIC CON MIGRAZIONE AUTOMATICA ---
+# --- DATABASE LOGIC ---
 def load_data():
     default_data = {
         "stats": {
@@ -172,19 +177,14 @@ def load_data():
     try:
         with open(DB_FILE, "r") as f:
             db = json.load(f)
-            # Pulizia vecchie chiavi fisiche se presenti
-            if "records" in db: del db["records"]
             if "garage" not in db: db["garage"] = []
             if "bar_streak" not in db: db["bar_streak"] = 0
             if "last_bar_check" not in db: db["last_bar_check"] = str(date.today())
             if "mission_stats" not in db: db["mission_stats"] = {"totale": 0, "urgenti": 0, "grossi": 0, "lavoretti": 0}
             
-            # Migrazione vecchie statistiche alle nuove (Fisico/Mente -> Disciplina/Focus)
             if "stats" in db:
-                if "fisico" in db["stats"]:
-                    db["stats"]["disciplina"] = db["stats"].pop("fisico")
-                if "mente" in db["stats"]:
-                    db["stats"]["focus"] = db["stats"].pop("mente")
+                if "fisico" in db["stats"]: db["stats"]["disciplina"] = db["stats"].pop("fisico")
+                if "mente" in db["stats"]: db["stats"]["focus"] = db["stats"].pop("mente")
                 if "disciplina" not in db["stats"]: db["stats"]["disciplina"] = {"xp": 0, "level": 1, "last_active": str(date.today())}
                 if "focus" not in db["stats"]: db["stats"]["focus"] = {"xp": 0, "level": 1, "last_active": str(date.today())}
                 if "skill" not in db["stats"]: db["stats"]["skill"] = {"xp": 0, "level": 1, "last_active": str(date.today())}
@@ -201,7 +201,6 @@ def save_data(data):
 
 data = load_data()
 
-# --- LOGICA DEL DECADIMENTO (LA RUGGINE) ---
 def applica_decadimento(data):
     today = date.today()
     regole = {
@@ -233,7 +232,6 @@ def applica_decadimento(data):
 applica_decadimento(data)
 
 def aggiungi_xp(stat, quantita):
-    # Protezione se viene passata una vecchia stat
     if stat == "fisico": stat = "disciplina"
     if stat == "mente": stat = "focus"
     
@@ -259,6 +257,10 @@ def aggiungi_xp(stat, quantita):
     
     save_data(data)
 
+# --- INIZIALIZZAZIONE STATO INTERFACCIA ---
+if "show_mission_form" not in st.session_state:
+    st.session_state.show_mission_form = False
+
 # --- MENU DI NAVIGAZIONE NELLA SIDEBAR ---
 st.sidebar.title("⚡ BYPASS")
 st.sidebar.caption("SISTEMA DI CONTROLLO ROUTINE")
@@ -277,12 +279,25 @@ st.sidebar.caption("Completa le faccende e rispetta le scadenze per salire di li
 
 # --- SEZIONE 1: BACHECA ---
 if scelta_menu == "📋 BACHECA MISSIONI":
-    st.title("⚡ BYPASS")
-    st.markdown("#### `SOVRASCRIVI LA ROUTINE. PRENDI IL CONTROLLO.`")
-    st.write("")
+    
+    # Intestazione con pulsante "+" minimalista integrato
+    col_title, col_btn = st.columns([8, 2])
+    with col_title:
+        st.title("⚡ BYPASS")
+        st.markdown("#### `IL TUO RADAR OPERATIVO.`")
+    with col_btn:
+        st.write("") # Spaziatore per allineamento verticale
+        st.write("")
+        st.markdown('<div class="btn-minimal">', unsafe_allow_html=True)
+        if st.button("➕ ADD", use_container_width=True):
+            st.session_state.show_mission_form = not st.session_state.show_mission_form
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+    st.write("---")
 
-    # Inserimento Missione
-    with st.expander("➕ APRI TERMINALE: AGGIUNGI MISSIONE", expanded=False):
+    # Modulo inserimento a comparsa (appare solo se clicchi "+")
+    if st.session_state.show_mission_form:
         with st.form("new_mission_form", clear_on_submit=True):
             titolo = st.text_input("Cosa devi fare? (es. Bolletta luce, Pulire macchina, Chiamare commercialista)")
             col_f1, col_f2 = st.columns(2)
@@ -298,7 +313,6 @@ if scelta_menu == "📋 BACHECA MISSIONI":
                     "focus (Lavoro / Progetti seri)", 
                     "skill (Fai-da-te / Manutenzione / Casa)"
                 ])
-                # Pulisci la stringa per salvare solo la parola chiave
                 stat_clean = stat.split(" ")[0]
             
             scadenza = None
@@ -320,12 +334,11 @@ if scelta_menu == "📋 BACHECA MISSIONI":
                     data["tasks"] = []
                 data["tasks"].append(nuova_missione)
                 save_data(data)
+                st.session_state.show_mission_form = False # Chiude il form in automatico dopo aver salvato
                 st.toast(f"Missione '{titolo}' caricata nei sistemi!", icon="🚀")
                 st.rerun()
 
-    # Mostra attività attive
-    st.write("---")
-    st.markdown("### 📋 MISSIONI E SCADENZE ATTIVE")
+    # Mostra lista immacolata delle attività
     all_tasks = data.get("tasks", [])
     attive = [t for t in all_tasks if not t.get("completato", False)]
 
@@ -352,7 +365,7 @@ if scelta_menu == "📋 BACHECA MISSIONI":
                     scad_date = datetime.strptime(t_scadenza, "%Y-%m-%d").date()
                     giorni_rimasti = (scad_date - date.today()).days
                     if giorni_rimasti <= 0:
-                        label = f"🚨 [SCADE OGGI/SCADUTA] — {t_titolo}"
+                        label = f"🚨 [SCADUTA / SCADE OGGI] — {t_titolo}"
                     elif giorni_rimasti == 1:
                         label = f"⚠️ [SCADE DOMANI] — {t_titolo}"
                     else:
@@ -392,7 +405,6 @@ elif scelta_menu == "👤 PROFILO & STATS":
     st.markdown(f"#### STATUS GENERALE: `Livello {data['stats']['rep']['level']}`")
     st.write("---")
     
-    # CRUSCOTTO OPERATIVO (MISSION ANALYTICS)
     st.markdown("### 📈 REGISTRO FACCENDE E SCADENZE")
     m_stats = data.get("mission_stats", {"totale": 0, "urgenti": 0, "grossi": 0, "lavoretti": 0})
     
@@ -420,7 +432,7 @@ elif scelta_menu == "👤 PROFILO & STATS":
     
     streak = data.get("bar_streak", 0)
     badge_list = [
-        {"nome": "Conti Puliti", "desc": "Risolvi 3 scadenze urgenti o pratiche burocratiche prima del tempo.", "sbloccato": m_stats.get("urgenti", 0) >= 3},
+        {"nome": "Conti Puliti", "desc": "Risolvi 3 scadenze urgenti o pratiche burocratiche.", "sbloccato": m_stats.get("urgenti", 0) >= 3},
         {"nome": "Macchina da Guerra", "desc": "Porta a termine 10 faccende totali sfoltendo la tua bacheca.", "sbloccato": m_stats.get("totale", 0) >= 10},
         {"nome": "Sotto i Radar", "desc": "Mantieni una scia di disciplina finanziaria (niente bar) per 5 giorni.", "sbloccato": streak >= 5},
         {"nome": "Infiltrato Invisibile", "desc": "Raggiungi 14 giorni di fila senza micro-spese superflue.", "sbloccato": streak >= 14},
@@ -467,7 +479,19 @@ elif scelta_menu == "🚘 GARAGE & RISPARMI":
     st.write("---")
     st.markdown("### 📦 OBIETTIVI DI ACQUISTO")
     
-    with st.expander("➕ AGGIUNGI OBIETTIVO ALLA RIMESSA", expanded=False):
+    # Inizializzazione stato del modulo Garage
+    if "show_garage_form" not in st.session_state:
+        st.session_state.show_garage_form = False
+        
+    col_g_title, col_g_btn = st.columns([8, 2])
+    with col_g_btn:
+        st.markdown('<div class="btn-minimal">', unsafe_allow_html=True)
+        if st.button("➕ ADD", key="toggle_garage", use_container_width=True):
+            st.session_state.show_garage_form = not st.session_state.show_garage_form
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    if st.session_state.show_garage_form:
         with st.form("new_garage_item"):
             col_g1, col_g2 = st.columns([2, 1])
             with col_g1:
@@ -482,6 +506,7 @@ elif scelta_menu == "🚘 GARAGE & RISPARMI":
                     "risparmiati": 0
                 })
                 save_data(data)
+                st.session_state.show_garage_form = False # Chiude il form
                 st.toast(f"'{oggetto}' inserito nel garage!", icon="🚘")
                 st.rerun()
                 
