@@ -57,8 +57,20 @@ def load_data():
             },
             "tasks": []
         }
-    with open(DB_FILE, "r") as f:
-        return json.load(f)
+    try:
+        with open(DB_FILE, "r") as f:
+            return json.load(f)
+    except Exception:
+        # Se il file è corrotto o vuoto, ricomincia da zero
+        return {
+            "stats": {
+                "fisico": {"xp": 0, "level": 1, "last_active": str(date.today())},
+                "mente": {"xp": 0, "level": 1, "last_active": str(date.today())},
+                "skill": {"xp": 0, "level": 1, "last_active": str(date.today())},
+                "rep": {"xp": 0, "level": 1}
+            },
+            "tasks": []
+        }
 
 def save_data(data):
     with open(DB_FILE, "w") as f:
@@ -67,6 +79,10 @@ def save_data(data):
 data = load_data()
 
 def aggiungi_xp(stat, quantita):
+    # Usiamo .get per evitare crash se la stat non esiste nel vecchio db
+    if stat not in data["stats"]:
+        data["stats"][stat] = {"xp": 0, "level": 1, "last_active": str(date.today())}
+    
     data["stats"][stat]["xp"] += quantita
     data["stats"][stat]["last_active"] = str(date.today())
     xp_necessari = 100 * data["stats"][stat]["level"]
@@ -88,7 +104,6 @@ with st.expander("➕ APRI TERMINALE: AGGIUNGI MISSIONE", expanded=False):
         tipo = st.selectbox("Tipologia", ["Scadenza URGENTE", "I Grossi (Priorità)", "Lavoretti (Secondari)"])
         stat = st.selectbox("Statistica che potenzia", ["fisico", "mente", "skill"])
         
-        # Mostra selezione data solo se è una Scadenza URGENTE
         scadenza = None
         if tipo == "Scadenza URGENTE":
             scadenza = st.date_input("Scade il:", min_value=date.today())
@@ -97,13 +112,15 @@ with st.expander("➕ APRI TERMINALE: AGGIUNGI MISSIONE", expanded=False):
         
         if submit and titolo:
             nuova_missione = {
-                "id": len(data["tasks"]) + 1,
+                "id": len(data.get("tasks", [])),
                 "titolo": titolo,
                 "tipo": tipo,
                 "stat": stat,
                 "scadenza": str(scadenza) if scadenza else None,
                 "completata": False
             }
+            if "tasks" not in data:
+                data["tasks"] = []
             data["tasks"].append(nuova_missione)
             save_data(data)
             st.success(f"Missione '{titolo}' caricata!")
@@ -112,50 +129,51 @@ with st.expander("➕ APRI TERMINALE: AGGIUNGI MISSIONE", expanded=False):
 # --- 2. LISTA DELLE MISSIONI ORDINATE ---
 st.write("### 📋 LE TUE MISSIONI ATTIVE")
 
-attive = [t for t in data["tasks"] if not t["completato"]]
+all_tasks = data.get("tasks", [])
+attive = [t for t in all_tasks if not t.get("completato", False)]
 
 if not attive:
     st.info("Nessuna missione attiva al momento. Sei libero o è il momento di pianificare?")
 else:
-    # Ordiniamo le missioni:
-    # 1. Prima le Scadenze Urgenti (ordinate per data di scadenza più vicina)
-    # 2. Poi I Grossi (Priorità)
-    # 3. Infine i Lavoretti
+    # Filtriamo in modo sicuro usando .get() per evitare KeyError
+    scadenze = [t for t in attive if t.get("tipo") == "Scadenza URGENTE"]
+    scadenze.sort(key=lambda x: x.get("scadenza") if x.get("scadenza") else "9999-12-31")
     
-    scadenze = [t for t in attive if t["tipo"] == "Scadenza URGENTE"]
-    # Ordina le scadenze per data
-    scadenze.sort(key=lambda x: x["scadenza"] if x["scadenza"] else "9999-12-31")
-    
-    grossi = [t for t in attive if t["tipo"] == "I Grossi (Priorità)"]
-    lavoretti = [t for t in attive if t["tipo"] == "Lavoretti (Secondari)"]
+    grossi = [t for t in attive if t.get("tipo") == "I Grossi (Priorità)"]
+    lavoretti = [t for t in attive if t.get("tipo") == "Lavoretti (Secondari)"]
     
     lista_ordinata = scadenze + grossi + lavoretti
 
     for task in lista_ordinata:
-        # Crea un'etichetta visiva per la priorità/scadenza
-        if task["tipo"] == "Scadenza URGENTE":
-            scad_date = datetime.strptime(task["scadenza"], "%Y-%m-%d").date()
-            giorni_rimasti = (scad_date - date.today()).days
-            if giorni_rimasti <= 1:
-                label = f"⚠️ [SCADE DOMANI/OGGI] - {task['titolo']}"
-            else:
-                label = f"⏳ [SCADE TRA {giorni_rimasti} GG] - {task['titolo']}"
+        t_tipo = task.get("tipo", "Lavoretti (Secondari)")
+        t_titolo = task.get("titolo", "Missione Senza Nome")
+        t_scadenza = task.get("scadenza")
+        t_id = task.get("id", 0)
+        t_stat = task.get("stat", "mente")
+        
+        if t_tipo == "Scadenza URGENTE" and t_scadenza:
+            try:
+                scad_date = datetime.strptime(t_scadenza, "%Y-%m-%d").date()
+                giorni_rimasti = (scad_date - date.today()).days
+                if giorni_rimasti <= 1:
+                    label = f"⚠️ [SCADE DOMANI/OGGI] - {t_titolo}"
+                else:
+                    label = f"⏳ [SCADE TRA {giorni_rimasti} GG] - {t_titolo}"
+            except Exception:
+                label = f"⏳ [SCADENZA] - {t_titolo}"
             xp_reward = 40
-        elif task["tipo"] == "I Grossi (Priorità)":
-            label = f"🔴 [PRIORITÀ] - {task['titolo']}"
+        elif t_tipo == "I Grossi (Priorità)":
+            label = f"🔴 [PRIORITÀ] - {t_titolo}"
             xp_reward = 30
         else:
-            label = f"⚪ [LAVORETTO] - {task['titolo']}"
+            label = f"⚪ [LAVORETTO] - {t_titolo}"
             xp_reward = 15
             
-        # Checkbox per completare la missione
-        if st.checkbox(label, key=f"task_{task['id']}"):
-            # Segna come completata
+        if st.checkbox(label, key=f"task_{t_id}"):
             for t in data["tasks"]:
-                if t["id"] == task["id"]:
+                if t.get("id") == t_id:
                     t["completato"] = True
             save_data(data)
-            # Aggiungi XP
-            aggiungi_xp(task["stat"], xp_reward)
-            st.toast(f"Missione Completata! +{xp_reward} XP in {task['stat'].upper()}", icon="⚡")
+            aggiungi_xp(t_stat, xp_reward)
+            st.toast(f"Missione Completata! +{xp_reward} XP", icon="⚡")
             st.rerun()
