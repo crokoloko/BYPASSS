@@ -159,3 +159,4 @@ else:
             aggiungi_xp(task["stat"], xp_reward)
             st.toast(f"Missione Completata! +{xp_reward} XP in {task['stat'].upper()}", icon="⚡")
             st.rerun()
+
