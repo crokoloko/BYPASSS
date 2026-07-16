@@ -80,7 +80,6 @@ st.markdown("""
         transform: translateY(0px);
     }
 
-    /* Styling delle Metriche e Contatori Missioni */
     div[data-testid="stMetricValue"] {
         color: #05d9e8 !important;
         font-family: 'JetBrains Mono', monospace !important;
@@ -152,18 +151,17 @@ st.markdown("""
 
 DB_FILE = "bypass_db.json"
 
-# --- DATABASE LOGIC ---
+# --- DATABASE LOGIC CON MIGRAZIONE AUTOMATICA ---
 def load_data():
     default_data = {
         "stats": {
-            "fisico": {"xp": 0, "level": 1, "last_active": str(date.today())},
-            "mente": {"xp": 0, "level": 1, "last_active": str(date.today())},
+            "disciplina": {"xp": 0, "level": 1, "last_active": str(date.today())},
+            "focus": {"xp": 0, "level": 1, "last_active": str(date.today())},
             "skill": {"xp": 0, "level": 1, "last_active": str(date.today())},
             "rep": {"xp": 0, "level": 1}
         },
         "mission_stats": {"totale": 0, "urgenti": 0, "grossi": 0, "lavoretti": 0},
         "tasks": [],
-        "records": {},
         "garage": [],
         "bar_streak": 0,
         "last_bar_check": str(date.today())
@@ -174,11 +172,25 @@ def load_data():
     try:
         with open(DB_FILE, "r") as f:
             db = json.load(f)
-            if "records" not in db: db["records"] = {}
+            # Pulizia vecchie chiavi fisiche se presenti
+            if "records" in db: del db["records"]
             if "garage" not in db: db["garage"] = []
             if "bar_streak" not in db: db["bar_streak"] = 0
             if "last_bar_check" not in db: db["last_bar_check"] = str(date.today())
             if "mission_stats" not in db: db["mission_stats"] = {"totale": 0, "urgenti": 0, "grossi": 0, "lavoretti": 0}
+            
+            # Migrazione vecchie statistiche alle nuove (Fisico/Mente -> Disciplina/Focus)
+            if "stats" in db:
+                if "fisico" in db["stats"]:
+                    db["stats"]["disciplina"] = db["stats"].pop("fisico")
+                if "mente" in db["stats"]:
+                    db["stats"]["focus"] = db["stats"].pop("mente")
+                if "disciplina" not in db["stats"]: db["stats"]["disciplina"] = {"xp": 0, "level": 1, "last_active": str(date.today())}
+                if "focus" not in db["stats"]: db["stats"]["focus"] = {"xp": 0, "level": 1, "last_active": str(date.today())}
+                if "skill" not in db["stats"]: db["stats"]["skill"] = {"xp": 0, "level": 1, "last_active": str(date.today())}
+            else:
+                db["stats"] = default_data["stats"]
+                
             return db
     except Exception:
         return default_data
@@ -193,12 +205,13 @@ data = load_data()
 def applica_decadimento(data):
     today = date.today()
     regole = {
-        "fisico": {"giorni": 3, "tasso": 0.05},
-        "mente": {"giorni": 4, "tasso": 0.04},
+        "disciplina": {"giorni": 3, "tasso": 0.05},
+        "focus": {"giorni": 4, "tasso": 0.04},
         "skill": {"giorni": 5, "tasso": 0.03}
     }
     modificato = False
     for stat_name, regola in regole.items():
+        if stat_name not in data["stats"]: continue
         last_active_str = data["stats"][stat_name].get("last_active", str(today))
         try:
             last_active_date = datetime.strptime(last_active_str, "%Y-%m-%d").date()
@@ -220,6 +233,10 @@ def applica_decadimento(data):
 applica_decadimento(data)
 
 def aggiungi_xp(stat, quantita):
+    # Protezione se viene passata una vecchia stat
+    if stat == "fisico": stat = "disciplina"
+    if stat == "mente": stat = "focus"
+    
     if stat not in data["stats"]:
         data["stats"][stat] = {"xp": 0, "level": 1, "last_active": str(date.today())}
     
@@ -233,8 +250,8 @@ def aggiungi_xp(stat, quantita):
         st.toast(f"⚡ SKILL UP: {stat.upper()} sale al Livello {data['stats'][stat]['level']}!", icon="🆙")
         
     livelli = [
-        data["stats"].get("fisico", {}).get("level", 1),
-        data["stats"].get("mente", {}).get("level", 1),
+        data["stats"].get("disciplina", {}).get("level", 1),
+        data["stats"].get("focus", {}).get("level", 1),
         data["stats"].get("skill", {}).get("level", 1)
     ]
     media_livelli = sum(livelli) // 3
@@ -256,7 +273,7 @@ scelta_menu = st.sidebar.radio(
 st.sidebar.write("---")
 st.sidebar.markdown(f"### 👑 REP GLOBALE: `Lvl. {data['stats']['rep']['level']}`")
 st.sidebar.progress(min(1.0, (data['stats']['rep'].get('xp', 0)) / (100 * max(1, data['stats']['rep']['level']))))
-st.sidebar.caption("Completa missioni per espandere il tuo impero.")
+st.sidebar.caption("Completa le faccende e rispetta le scadenze per salire di livello.")
 
 # --- SEZIONE 1: BACHECA ---
 if scelta_menu == "📋 BACHECA MISSIONI":
@@ -267,7 +284,7 @@ if scelta_menu == "📋 BACHECA MISSIONI":
     # Inserimento Missione
     with st.expander("➕ APRI TERMINALE: AGGIUNGI MISSIONE", expanded=False):
         with st.form("new_mission_form", clear_on_submit=True):
-            titolo = st.text_input("Nome della Missione (es. Pulire macchina, Pagare multa, Workout)")
+            titolo = st.text_input("Cosa devi fare? (es. Bolletta luce, Pulire macchina, Chiamare commercialista)")
             col_f1, col_f2 = st.columns(2)
             with col_f1:
                 tipo = st.selectbox("Gravosità / Urgenza", [
@@ -276,11 +293,17 @@ if scelta_menu == "📋 BACHECA MISSIONI":
                     "Lavoretti / Routine (+15 XP)"
                 ])
             with col_f2:
-                stat = st.selectbox("Statistica potenziata", ["fisico", "mente", "skill"])
+                stat = st.selectbox("Area di potenziamento", [
+                    "disciplina (Scadenze / Burocrazia)", 
+                    "focus (Lavoro / Progetti seri)", 
+                    "skill (Fai-da-te / Manutenzione / Casa)"
+                ])
+                # Pulisci la stringa per salvare solo la parola chiave
+                stat_clean = stat.split(" ")[0]
             
             scadenza = None
             if "URGENTE" in tipo:
-                scadenza = st.date_input("Scade il:", min_value=date.today())
+                scadenza = st.date_input("Data limite inderogabile:", min_value=date.today())
                 
             submit = st.form_submit_button("🔥 REGISTRA NEI SISTEMI")
             
@@ -289,7 +312,7 @@ if scelta_menu == "📋 BACHECA MISSIONI":
                     "id": len(data.get("tasks", [])) + 1,
                     "titolo": titolo,
                     "tipo": tipo,
-                    "stat": stat,
+                    "stat": stat_clean,
                     "scadenza": str(scadenza) if scadenza else None,
                     "completato": False
                 }
@@ -302,12 +325,12 @@ if scelta_menu == "📋 BACHECA MISSIONI":
 
     # Mostra attività attive
     st.write("---")
-    st.markdown("### 📋 MISSIONI ATTIVE")
+    st.markdown("### 📋 MISSIONI E SCADENZE ATTIVE")
     all_tasks = data.get("tasks", [])
     attive = [t for t in all_tasks if not t.get("completato", False)]
 
     if not attive:
-        st.info("⚡ Nessuna missione attiva. Il sistema è pulito. Sei libero o è il momento di pianificare un nuovo colpo?")
+        st.info("⚡ Nessuna faccenda in sospeso. Il radar è pulito! Goditi il tempo libero o pianifica la prossima mossa.")
     else:
         scadenze = [t for t in attive if "URGENTE" in t.get("tipo", "")]
         scadenze.sort(key=lambda x: x.get("scadenza") if x.get("scadenza") else "9999-12-31")
@@ -322,14 +345,16 @@ if scelta_menu == "📋 BACHECA MISSIONI":
             t_titolo = task.get("titolo", "Missione Senza Nome")
             t_scadenza = task.get("scadenza")
             t_id = task.get("id", 0)
-            t_stat = task.get("stat", "mente")
+            t_stat = task.get("stat", "disciplina")
             
             if "URGENTE" in t_tipo and t_scadenza:
                 try:
                     scad_date = datetime.strptime(t_scadenza, "%Y-%m-%d").date()
                     giorni_rimasti = (scad_date - date.today()).days
-                    if giorni_rimasti <= 1:
-                        label = f"⚠️ [SCADE OGGI/DOMANI] — {t_titolo}"
+                    if giorni_rimasti <= 0:
+                        label = f"🚨 [SCADE OGGI/SCADUTA] — {t_titolo}"
+                    elif giorni_rimasti == 1:
+                        label = f"⚠️ [SCADE DOMANI] — {t_titolo}"
                     else:
                         label = f"⏳ [TRA {giorni_rimasti} GG] — {t_titolo}"
                 except Exception:
@@ -346,7 +371,6 @@ if scelta_menu == "📋 BACHECA MISSIONI":
                 categoria_stat = "lavoretti"
                 
             if st.checkbox(label, key=f"task_{t_id}"):
-                # Segna come completata e incrementa i contatori di missione
                 for t in data["tasks"]:
                     if t.get("id") == t_id:
                         t["completato"] = True
@@ -359,7 +383,7 @@ if scelta_menu == "📋 BACHECA MISSIONI":
                 
                 save_data(data)
                 aggiungi_xp(t_stat, xp_reward)
-                st.toast(f"Completato! +{xp_reward} XP in {t_stat.upper()}", icon="⚡")
+                st.toast(f"Faccenda risolta! +{xp_reward} XP in {t_stat.upper()}", icon="⚡")
                 st.rerun()
 
 # --- SEZIONE 2: PROFILO & STATISTICHE ---
@@ -369,18 +393,18 @@ elif scelta_menu == "👤 PROFILO & STATS":
     st.write("---")
     
     # CRUSCOTTO OPERATIVO (MISSION ANALYTICS)
-    st.markdown("### 📈 REGISTRO OPERATIVO (MISSION ANALYTICS)")
+    st.markdown("### 📈 REGISTRO FACCENDE E SCADENZE")
     m_stats = data.get("mission_stats", {"totale": 0, "urgenti": 0, "grossi": 0, "lavoretti": 0})
     
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-    col_m1.metric("🔥 Totale Svolte", m_stats.get("totale", 0))
+    col_m1.metric("🔥 Totale Risolte", m_stats.get("totale", 0))
     col_m2.metric("⚠️ Scadenze", m_stats.get("urgenti", 0))
     col_m3.metric("🔴 I Grossi", m_stats.get("grossi", 0))
     col_m4.metric("⚪ Routine/Manut.", m_stats.get("lavoretti", 0))
     st.write("---")
     
-    st.markdown("### 📊 PARAMETRI FISICI & MENTALI")
-    for stat in ["fisico", "mente", "skill"]:
+    st.markdown("### 📊 PARAMETRI DI ORGANIZZAZIONE")
+    for stat in ["disciplina", "focus", "skill"]:
         info = data["stats"].get(stat, {"xp": 0, "level": 1, "last_active": str(date.today())})
         livello_attuale = info.get("level", 1)
         xp_attuali = info.get("xp", 0)
@@ -392,37 +416,14 @@ elif scelta_menu == "👤 PROFILO & STATS":
         st.write("")
 
     st.write("---")
-    st.markdown("### ⏱️ CRONOMETRO & RECORD")
-    
-    with st.form("add_record_form"):
-        col_r1, col_r2 = st.columns(2)
-        with col_r1:
-            nome_att = st.text_input("Esercizio (es. Corsa 5km, Circuito):")
-        with col_r2:
-            tempo_att = st.text_input("Tempo/Risultato (es. 21m 15s):")
-        submit_rec = st.form_submit_button("⚡ REGISTRA NUOVO RECORD")
-        if submit_rec and nome_att and tempo_att:
-            data["records"][nome_att] = tempo_att
-            save_data(data)
-            aggiungi_xp("fisico", 20)
-            st.toast(f"Nuovo record per {nome_att}! (+20 XP FISICO)", icon="🏆")
-            st.rerun()
-            
-    if data["records"]:
-        for att, temp in data["records"].items():
-            st.markdown(f"⚡ **{att}**: `{temp}`")
-    else:
-        st.info("Nessun record registrato. Fai partire il cronometro e supera i tuoi limiti!")
-
-    st.write("---")
-    st.markdown("### 🏆 BACHECA TROFEI")
+    st.markdown("### 🏆 BACHECA TROFEI OPERATIVI")
     
     streak = data.get("bar_streak", 0)
     badge_list = [
-        {"nome": "Piede di Piombo", "desc": "Inserisci il tuo primo record personale sul cronometro.", "sbloccato": len(data["records"]) >= 1},
-        {"nome": "Sotto i Radar", "desc": "Mantieni una scia di disciplina senza bar di 5 giorni.", "sbloccato": streak >= 5},
+        {"nome": "Conti Puliti", "desc": "Risolvi 3 scadenze urgenti o pratiche burocratiche prima del tempo.", "sbloccato": m_stats.get("urgenti", 0) >= 3},
+        {"nome": "Macchina da Guerra", "desc": "Porta a termine 10 faccende totali sfoltendo la tua bacheca.", "sbloccato": m_stats.get("totale", 0) >= 10},
+        {"nome": "Sotto i Radar", "desc": "Mantieni una scia di disciplina finanziaria (niente bar) per 5 giorni.", "sbloccato": streak >= 5},
         {"nome": "Infiltrato Invisibile", "desc": "Raggiungi 14 giorni di fila senza micro-spese superflue.", "sbloccato": streak >= 14},
-        {"nome": "Macchina da Guerra", "desc": "Raggiungi quota 10 missioni totali portate a termine.", "sbloccato": m_stats.get("totale", 0) >= 10}
     ]
     
     for b in badge_list:
@@ -449,7 +450,7 @@ elif scelta_menu == "🚘 GARAGE & RISPARMI":
                 data["bar_streak"] += 1
                 data["last_bar_check"] = today_str
                 save_data(data)
-                aggiungi_xp("mente", 15)
+                aggiungi_xp("disciplina", 15)
                 st.toast("Ottima disciplina! Scia prolungata.", icon="🔥")
                 st.rerun()
         with col2:
