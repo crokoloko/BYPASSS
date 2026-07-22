@@ -30,10 +30,9 @@ st.markdown("""
     .stApp {
         background: linear-gradient(135deg, #0B0B1A 0%, #1A0B2E 50%, #0B1120 100%) !important;
         background-attachment: fixed !important;
-        padding-bottom: 90px; /* Spazio per non coprire i contenuti con la barra fissa */
+        padding-top: 80px; /* Spazio per non coprire i contenuti con la barra fissa in alto */
     }
     
-    /* Nasconde la sidebar originaria */
     section[data-testid="stSidebar"] {
         display: none !important;
     }
@@ -94,7 +93,6 @@ st.markdown("""
         border-radius: 12px !important;
     }
 
-    /* Stile compatto orizzontale per le Statistiche */
     .stats-container {
         display: flex;
         gap: 10px;
@@ -127,32 +125,27 @@ st.markdown("""
         margin-top: 4px;
     }
 
-    /* Barra di Navigazione Inferiore Fissa */
-    .fixed-nav-bar {
+    /* Barra di Navigazione Superiore Fissa */
+    .fixed-top-nav {
         position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 90%;
-        max-width: 450px;
-        background: rgba(20, 10, 40, 0.75);
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: rgba(15, 8, 30, 0.85);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 24px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 0, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        z-index: 999999;
+        padding: 10px 20px;
+    }
+    
+    .fixed-top-inner {
+        max-width: 700px;
+        margin: 0 auto;
         display: flex;
         justify-content: space-around;
         align-items: center;
-        padding: 10px 0;
-        z-index: 999999;
-    }
-    
-    /* Pulsanti invisibili sopra le colonne per la navigazione */
-    .stButton > button[kind="secondary"] {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
     }
 
     div[data-testid="stProgress"] > div > div > div > div {
@@ -302,9 +295,29 @@ def aggiungi_xp(stat, quantita):
 if "show_mission_form" not in st.session_state:
     st.session_state.show_mission_form = False
 
-# Gestione stato navigazione tramite icone fisse
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = "bacheca"
+
+# --- BARRA DI NAVIGAZIONE SUPERIORE FISSA CON ICONE ---
+st.markdown('<div class="fixed-top-nav"><div class="fixed-top-inner">', unsafe_allow_html=True)
+nav_col1, nav_col2, nav_col3 = st.columns(3)
+
+with nav_col1:
+    if st.button("📋", use_container_width=True, key="nav_bacheca"):
+        st.session_state.active_tab = "bacheca"
+        st.rerun()
+
+with nav_col2:
+    if st.button("📊", use_container_width=True, key="nav_profilo"):
+        st.session_state.active_tab = "profilo"
+        st.rerun()
+
+with nav_col3:
+    if st.button("🚗", use_container_width=True, key="nav_garage"):
+        st.session_state.active_tab = "garage"
+        st.rerun()
+
+st.markdown('</div></div>', unsafe_allow_html=True)
 
 # --- RENDER CONTENUTI A SECONDA DELLA TAB ATTIVA ---
 
@@ -559,27 +572,3 @@ elif st.session_state.active_tab == "garage":
                         aggiungi_xp("skill", 10)
                     st.rerun()
             st.write("---")
-
-# --- BARRA DI NAVIGAZIONE INFERIORE FISSA CON ICONE ---
-st.markdown('<div class="fixed-nav-bar">', unsafe_allow_html=True)
-nav_col1, nav_col2, nav_col3 = st.columns(3)
-
-with nav_col1:
-    # Icona Bacheca (📋)
-    if st.button("📋", use_container_width=True, key="nav_bacheca"):
-        st.session_state.active_tab = "bacheca"
-        st.rerun()
-
-with nav_col2:
-    # Icona Profilo / Statistiche (📊)
-    if st.button("📊", use_container_width=True, key="nav_profilo"):
-        st.session_state.active_tab = "profilo"
-        st.rerun()
-
-with nav_col3:
-    # Icona Garage / Risparmi (🚗)
-    if st.button("🚗", use_container_width=True, key="nav_garage"):
-        st.session_state.active_tab = "garage"
-        st.rerun()
-
-st.markdown('</div>', unsafe_allow_html=True)
