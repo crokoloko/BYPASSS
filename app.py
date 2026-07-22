@@ -22,7 +22,6 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
-    /* SFONDO GENERALE APP (Gradiente Galattico) */
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif !important;
         color: #FFFFFF !important;
@@ -33,7 +32,6 @@ st.markdown("""
         background-attachment: fixed !important;
     }
     
-    /* SIDEBAR CON EFFETTO VETRO (Glassmorphism) */
     section[data-testid="stSidebar"] {
         background-color: rgba(20, 10, 40, 0.6) !important;
         backdrop-filter: blur(15px) !important;
@@ -57,7 +55,6 @@ st.markdown("""
         text-shadow: 0 0 10px rgba(255, 51, 102, 0.4);
     }
 
-    /* CARD NEON E VETRO (Form e Contenitori) */
     div[data-testid="stForm"], .neumorphic-card {
         background: rgba(255, 255, 255, 0.03) !important;
         backdrop-filter: blur(12px) !important;
@@ -69,7 +66,6 @@ st.markdown("""
         margin-bottom: 24px;
     }
 
-    /* PULSANTI CON GRADIENTE E NEON GLOW */
     div.stButton > button, div.stFormSubmitButton > button {
         background: linear-gradient(45deg, #FF3366, #FF9933) !important;
         color: #FFFFFF !important;
@@ -94,37 +90,73 @@ st.markdown("""
         transform: translateY(0px);
     }
     
-    /* Pulsante Add Minimal */
     .btn-minimal > div > button {
         padding: 0.4rem 1rem !important;
         font-size: 0.9rem !important;
         border-radius: 12px !important;
     }
 
-    /* METRICHE (Cruscotto) CON STILE VETRO */
-    div[data-testid="stMetricValue"] {
-        color: #00FFFF !important;
-        font-weight: 700 !important;
-        font-size: 2.2rem !important;
-        text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    /* Stile compatto orizzontale per le Statistiche */
+    .stats-container {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+        margin-bottom: 20px;
     }
-    div[data-testid="stMetricLabel"] {
-        color: #CCCCCC !important;
-        font-weight: 500 !important;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    div[data-testid="metric-container"] {
-        background: rgba(255, 255, 255, 0.03) !important;
+    .stat-box {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(10px);
-        border-radius: 16px;
+        border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        padding: 16px;
+        padding: 10px 6px;
         text-align: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+    .stat-box .stat-value {
+        color: #00FFFF;
+        font-weight: 700;
+        font-size: 1.3rem;
+        text-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+        line-height: 1.2;
+    }
+    .stat-box .stat-label {
+        color: #CCCCCC;
+        font-weight: 500;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 4px;
     }
 
-    /* CAMPI DI INPUT - EFFETTO VETRO SCURO */
+    /* Parametri Vitali standard */
+    div[data-testid="stProgress"] > div > div > div > div {
+        background: linear-gradient(90deg, #FF3366, #00FFFF) !important;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    }
+
+    .badge-unlocked {
+        padding: 18px 24px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        border-left: 6px solid #00FFFF;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(0, 255, 255, 0.1);
+        margin-bottom: 16px;
+    }
+    
+    .badge-locked {
+        padding: 18px 24px;
+        background: rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 16px;
+        opacity: 0.4;
+    }
+    
     .stTextInput input, .stSelectbox div div, .stNumberInput input {
         background: rgba(0, 0, 0, 0.3) !important;
         color: #FFFFFF !important;
@@ -137,36 +169,6 @@ st.markdown("""
     .stTextInput input:focus {
         border-color: #00FFFF !important;
         box-shadow: 0 0 10px rgba(0, 255, 255, 0.4) !important;
-    }
-
-    /* BARRE DI PROGRESSO NEON */
-    div[data-testid="stProgress"] > div > div > div > div {
-        background: linear-gradient(90deg, #FF3366, #00FFFF) !important;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-    }
-
-    /* BADGE TROFEI - SBLOCCATI */
-    .badge-unlocked {
-        padding: 18px 24px;
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        border: 1px solid rgba(0, 255, 255, 0.3);
-        border-left: 6px solid #00FFFF;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(0, 255, 255, 0.1);
-        margin-bottom: 16px;
-    }
-    
-    /* BADGE TROFEI - BLOCCATI */
-    .badge-locked {
-        padding: 18px 24px;
-        background: rgba(0, 0, 0, 0.2);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        margin-bottom: 16px;
-        opacity: 0.4;
     }
     
     .stCheckbox > label {
@@ -405,14 +407,31 @@ elif scelta_menu == "PROFILO & STATS":
     st.markdown(f"#### LIVELLO REP: {data['stats']['rep']['level']}")
     st.write("---")
     
-    st.markdown("### CRUSCOTTO ANALITICO")
+    st.markdown("### STATISTICHE")
     m_stats = data.get("mission_stats", {"totale": 0, "urgenti": 0, "grossi": 0, "lavoretti": 0})
     
-    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-    col_m1.metric("Task Totali", m_stats.get("totale", 0))
-    col_m2.metric("Scadenze", m_stats.get("urgenti", 0))
-    col_m3.metric("Progetti", m_stats.get("grossi", 0))
-    col_m4.metric("Routine", m_stats.get("lavoretti", 0))
+    # Sezione Statistiche compatta in fila orizzontale
+    st.markdown(f"""
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-value">{m_stats.get("totale", 0)}</div>
+                <div class="stat-label">Totali</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{m_stats.get("urgenti", 0)}</div>
+                <div class="stat-label">Scadenze</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{m_stats.get("grossi", 0)}</div>
+                <div class="stat-label">Progetti</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{m_stats.get("lavoretti", 0)}</div>
+                <div class="stat-label">Routine</div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
     st.write("---")
     
     st.markdown("### PARAMETRI VITALI")
