@@ -7,7 +7,7 @@ from datetime import datetime, date
 st.set_page_config(
     page_title="BYPASS",
     layout="centered",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 BIN_ID = "6a6062a5f5f4af5e29af85cd"
@@ -30,14 +30,12 @@ st.markdown("""
     .stApp {
         background: linear-gradient(135deg, #0B0B1A 0%, #1A0B2E 50%, #0B1120 100%) !important;
         background-attachment: fixed !important;
+        padding-bottom: 90px; /* Spazio per non coprire i contenuti con la barra fissa */
     }
     
+    /* Nasconde la sidebar originaria */
     section[data-testid="stSidebar"] {
-        background-color: rgba(20, 10, 40, 0.6) !important;
-        backdrop-filter: blur(15px) !important;
-        -webkit-backdrop-filter: blur(15px) !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
-        box-shadow: 5px 0 30px rgba(0, 255, 255, 0.05) !important;
+        display: none !important;
     }
     
     h1, h2, h3, h4, h5, h6 {
@@ -129,7 +127,34 @@ st.markdown("""
         margin-top: 4px;
     }
 
-    /* Parametri Vitali standard */
+    /* Barra di Navigazione Inferiore Fissa */
+    .fixed-nav-bar {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 450px;
+        background: rgba(20, 10, 40, 0.75);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 0, 255, 0.05);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 10px 0;
+        z-index: 999999;
+    }
+    
+    /* Pulsanti invisibili sopra le colonne per la navigazione */
+    .stButton > button[kind="secondary"] {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
     div[data-testid="stProgress"] > div > div > div > div {
         background: linear-gradient(90deg, #FF3366, #00FFFF) !important;
         border-radius: 10px;
@@ -277,22 +302,13 @@ def aggiungi_xp(stat, quantita):
 if "show_mission_form" not in st.session_state:
     st.session_state.show_mission_form = False
 
-st.sidebar.title("BYPASS")
-st.sidebar.caption("SISTEMA DI CONTROLLO OPERATIVO")
-st.sidebar.write("---")
+# Gestione stato navigazione tramite icone fisse
+if "active_tab" not in st.session_state:
+    st.session_state.active_tab = "bacheca"
 
-scelta_menu = st.sidebar.radio(
-    "Navigazione",
-    ["BACHECA MISSIONI", "PROFILO & STATS", "GARAGE & RISPARMI"],
-    label_visibility="collapsed"
-)
+# --- RENDER CONTENUTI A SECONDA DELLA TAB ATTIVA ---
 
-st.sidebar.write("---")
-st.sidebar.markdown(f"### REP GLOBALE: Livello {data['stats']['rep']['level']}")
-st.sidebar.progress(min(1.0, (data['stats']['rep'].get('xp', 0)) / (100 * max(1, data['stats']['rep']['level']))))
-
-if scelta_menu == "BACHECA MISSIONI":
-    
+if st.session_state.active_tab == "bacheca":
     col_title, col_btn = st.columns([8, 2])
     with col_title:
         st.title("BYPASS")
@@ -301,7 +317,7 @@ if scelta_menu == "BACHECA MISSIONI":
         st.write("")
         st.write("")
         st.markdown('<div class="btn-minimal">', unsafe_allow_html=True)
-        if st.button("ADD TASK", use_container_width=True):
+        if st.button("ADD", use_container_width=True):
             st.session_state.show_mission_form = not st.session_state.show_mission_form
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
@@ -402,7 +418,7 @@ if scelta_menu == "BACHECA MISSIONI":
                 st.toast(f"Task completato (+{xp_reward} XP in {t_stat.upper()})")
                 st.rerun()
 
-elif scelta_menu == "PROFILO & STATS":
+elif st.session_state.active_tab == "profilo":
     st.title("STATO OPERATIVO")
     st.markdown(f"#### LIVELLO REP: {data['stats']['rep']['level']}")
     st.write("---")
@@ -410,7 +426,6 @@ elif scelta_menu == "PROFILO & STATS":
     st.markdown("### STATISTICHE")
     m_stats = data.get("mission_stats", {"totale": 0, "urgenti": 0, "grossi": 0, "lavoretti": 0})
     
-    # Sezione Statistiche compatta in fila orizzontale
     st.markdown(f"""
         <div class="stats-container">
             <div class="stat-box">
@@ -462,7 +477,7 @@ elif scelta_menu == "PROFILO & STATS":
         else:
             st.markdown(f"<div class='badge-locked'><b>{b['nome']}</b><br><span style='color:#888888;'>{b['desc']}</span></div>", unsafe_allow_html=True)
 
-elif scelta_menu == "GARAGE & RISPARMI":
+elif st.session_state.active_tab == "garage":
     st.title("GESTIONE FONDI")
     st.write("---")
     
@@ -544,3 +559,27 @@ elif scelta_menu == "GARAGE & RISPARMI":
                         aggiungi_xp("skill", 10)
                     st.rerun()
             st.write("---")
+
+# --- BARRA DI NAVIGAZIONE INFERIORE FISSA CON ICONE ---
+st.markdown('<div class="fixed-nav-bar">', unsafe_allow_html=True)
+nav_col1, nav_col2, nav_col3 = st.columns(3)
+
+with nav_col1:
+    # Icona Bacheca (📋)
+    if st.button("📋", use_container_width=True, key="nav_bacheca"):
+        st.session_state.active_tab = "bacheca"
+        st.rerun()
+
+with nav_col2:
+    # Icona Profilo / Statistiche (📊)
+    if st.button("📊", use_container_width=True, key="nav_profilo"):
+        st.session_state.active_tab = "profilo"
+        st.rerun()
+
+with nav_col3:
+    # Icona Garage / Risparmi (🚗)
+    if st.button("🚗", use_container_width=True, key="nav_garage"):
+        st.session_state.active_tab = "garage"
+        st.rerun()
+
+st.markdown('</div>', unsafe_allow_html=True)
