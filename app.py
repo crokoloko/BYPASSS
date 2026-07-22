@@ -22,20 +22,24 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
+    /* SFONDO GENERALE APP (Gradiente Galattico) */
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif !important;
-        background-color: #212121 !important;
-        color: #E0E0E0 !important;
+        color: #FFFFFF !important;
     }
     
     .stApp {
-        background-color: #212121 !important;
+        background: linear-gradient(135deg, #0B0B1A 0%, #1A0B2E 50%, #0B1120 100%) !important;
+        background-attachment: fixed !important;
     }
     
+    /* SIDEBAR CON EFFETTO VETRO (Glassmorphism) */
     section[data-testid="stSidebar"] {
-        background-color: #212121 !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.02) !important;
-        box-shadow: 10px 0px 30px #151515;
+        background-color: rgba(20, 10, 40, 0.6) !important;
+        backdrop-filter: blur(15px) !important;
+        -webkit-backdrop-filter: blur(15px) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 5px 0 30px rgba(0, 255, 255, 0.05) !important;
     }
     
     h1, h2, h3, h4, h5, h6 {
@@ -46,48 +50,48 @@ st.markdown("""
     }
     
     h4 {
-        color: #B32428 !important; /* Accento Rosso Carminio */
+        color: #FF3366 !important; 
         text-transform: uppercase;
         font-size: 0.9rem !important;
         letter-spacing: 2px;
+        text-shadow: 0 0 10px rgba(255, 51, 102, 0.4);
     }
 
-    /* Form e Card Neumorfiche */
+    /* CARD NEON E VETRO (Form e Contenitori) */
     div[data-testid="stForm"], .neumorphic-card {
-        background-color: #212121 !important;
+        background: rgba(255, 255, 255, 0.03) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
         border-radius: 20px !important;
-        border: 1px solid rgba(255, 255, 255, 0.04) !important;
-        box-shadow: 8px 8px 16px #151515, -8px -8px 16px #2d2d2d !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 0 15px rgba(255, 0, 255, 0.05) !important;
         padding: 24px;
         margin-bottom: 24px;
     }
 
-    /* Pulsanti - Effetto Sollevato */
+    /* PULSANTI CON GRADIENTE E NEON GLOW */
     div.stButton > button, div.stFormSubmitButton > button {
-        background-color: #212121 !important;
-        color: #B32428 !important;
+        background: linear-gradient(45deg, #FF3366, #FF9933) !important;
+        color: #FFFFFF !important;
         border-radius: 16px !important;
-        border: 1px solid rgba(255, 255, 255, 0.04) !important;
-        box-shadow: 6px 6px 12px #151515, -6px -6px 12px #2d2d2d !important;
+        border: none !important;
+        box-shadow: 0 0 15px rgba(255, 51, 102, 0.4) !important;
         font-family: 'Inter', sans-serif;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 1px;
         width: 100%;
-        transition: all 0.2s ease-in-out;
+        transition: all 0.3s ease-in-out;
     }
     
-    /* Pulsanti - Hover Effetto Premuto/Scavato */
     div.stButton > button:hover, div.stFormSubmitButton > button:hover {
-        color: #FFFFFF !important;
-        background-color: #B32428 !important;
-        border-color: #B32428 !important;
-        box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.2), inset -4px -4px 8px rgba(255, 255, 255, 0.1) !important;
+        background: linear-gradient(45deg, #FF9933, #FF3366) !important;
+        box-shadow: 0 0 25px rgba(255, 51, 102, 0.8) !important;
+        transform: translateY(-2px);
     }
     
     div.stButton > button:active {
-        box-shadow: inset 6px 6px 12px #151515, inset -6px -6px 12px #2d2d2d !important;
-        color: #888888 !important;
+        transform: translateY(0px);
     }
     
     /* Pulsante Add Minimal */
@@ -97,71 +101,74 @@ st.markdown("""
         border-radius: 12px !important;
     }
 
-    /* Metriche (Cruscotto) */
+    /* METRICHE (Cruscotto) CON STILE VETRO */
     div[data-testid="stMetricValue"] {
-        color: #FFFFFF !important;
+        color: #00FFFF !important;
         font-weight: 700 !important;
         font-size: 2.2rem !important;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
     }
     div[data-testid="stMetricLabel"] {
-        color: #888888 !important;
+        color: #CCCCCC !important;
         font-weight: 500 !important;
         text-transform: uppercase;
         letter-spacing: 1px;
     }
     div[data-testid="metric-container"] {
-        background-color: #212121;
+        background: rgba(255, 255, 255, 0.03) !important;
+        backdrop-filter: blur(10px);
         border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.03);
-        box-shadow: inset 4px 4px 8px #151515, inset -4px -4px 8px #2d2d2d;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         padding: 16px;
         text-align: center;
     }
 
-    /* Campi di Input - Effetto Scavato */
+    /* CAMPI DI INPUT - EFFETTO VETRO SCURO */
     .stTextInput input, .stSelectbox div div, .stNumberInput input {
-        background-color: #212121 !important;
-        color: #E0E0E0 !important;
+        background: rgba(0, 0, 0, 0.3) !important;
+        color: #FFFFFF !important;
         border-radius: 16px !important;
-        border: 1px solid rgba(255, 255, 255, 0.02) !important;
-        box-shadow: inset 6px 6px 12px #151515, inset -6px -6px 12px #2d2d2d !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
         padding: 12px 16px !important;
         font-weight: 500;
     }
     
     .stTextInput input:focus {
-        border-color: #B32428 !important;
-        box-shadow: inset 6px 6px 12px #151515, inset -6px -6px 12px #2d2d2d, 0 0 10px rgba(179, 36, 40, 0.2) !important;
+        border-color: #00FFFF !important;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.4) !important;
     }
 
-    /* Barre di Progresso */
+    /* BARRE DI PROGRESSO NEON */
     div[data-testid="stProgress"] > div > div > div > div {
-        background-color: #B32428 !important;
+        background: linear-gradient(90deg, #FF3366, #00FFFF) !important;
         border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
     }
 
-    /* Badge Trofei - Sbloccati */
+    /* BADGE TROFEI - SBLOCCATI */
     .badge-unlocked {
         padding: 18px 24px;
-        background-color: #212121;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
         border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        border-left: 6px solid #B32428;
-        box-shadow: 8px 8px 16px #151515, -8px -8px 16px #2d2d2d;
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        border-left: 6px solid #00FFFF;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(0, 255, 255, 0.1);
         margin-bottom: 16px;
-    }
-    /* Badge Trofei - Bloccati (Scavati) */
-    .badge-locked {
-        padding: 18px 24px;
-        background-color: #212121;
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.02);
-        box-shadow: inset 6px 6px 12px #151515, inset -6px -6px 12px #2d2d2d;
-        margin-bottom: 16px;
-        opacity: 0.5;
     }
     
-    /* Checkbox */
+    /* BADGE TROFEI - BLOCCATI */
+    .badge-locked {
+        padding: 18px 24px;
+        background: rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 16px;
+        opacity: 0.4;
+    }
+    
     .stCheckbox > label {
         padding: 8px 0;
     }
@@ -432,9 +439,9 @@ elif scelta_menu == "PROFILO & STATS":
     
     for b in badge_list:
         if b["sbloccato"]:
-            st.markdown(f"<div class='badge-unlocked'><b>{b['nome']}</b><br><span style='color:#888;'>{b['desc']}</span></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='badge-unlocked'><b>{b['nome']}</b><br><span style='color:#CCCCCC;'>{b['desc']}</span></div>", unsafe_allow_html=True)
         else:
-            st.markdown(f"<div class='badge-locked'><b>{b['nome']}</b><br><span style='color:#666;'>{b['desc']}</span></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='badge-locked'><b>{b['nome']}</b><br><span style='color:#888888;'>{b['desc']}</span></div>", unsafe_allow_html=True)
 
 elif scelta_menu == "GARAGE & RISPARMI":
     st.title("GESTIONE FONDI")
