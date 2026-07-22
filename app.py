@@ -5,8 +5,7 @@ import requests
 from datetime import datetime, date
 
 st.set_page_config(
-    page_title="BYPASS.EXE",
-    page_icon="🐱",
+    page_title="BYPASS",
     layout="centered",
     initial_sidebar_state="expanded"
 )
@@ -21,124 +20,150 @@ HEADERS = {
 
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Permanent+Marker&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
     html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Inter', sans-serif !important;
+        background-color: #212121 !important;
+        color: #E0E0E0 !important;
     }
     
     .stApp {
-        background-color: #1a1a1a;
-        background-image: radial-gradient(#2b2b2b 2px, transparent 2px);
-        background-size: 30px 30px;
-        color: #e0e0e0;
+        background-color: #212121 !important;
     }
     
     section[data-testid="stSidebar"] {
-        background-color: #111 !important;
-        border-right: 4px solid #d92525;
+        background-color: #212121 !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.02) !important;
+        box-shadow: 10px 0px 30px #151515;
     }
     
-    h1, h2, h3 {
-        font-family: 'Permanent Marker', cursive !important;
-        color: #f4f4f4 !important;
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Inter', sans-serif !important;
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.5px;
+    }
+    
+    h4 {
+        color: #B32428 !important; /* Accento Rosso Carminio */
         text-transform: uppercase;
+        font-size: 0.9rem !important;
         letter-spacing: 2px;
-        text-shadow: 2px 2px 0px #000;
-    }
-    h4, h5 {
-        font-family: 'Permanent Marker', cursive !important;
-        color: #d92525 !important;
-        letter-spacing: 1px;
     }
 
-    div[data-testid="stForm"] {
-        background: #222 !important;
-        border: 2px solid #555 !important;
-        border-radius: 4px !important;
-        box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.8) !important;
-        padding: 15px;
-        margin-bottom: 20px;
+    /* Form e Card Neumorfiche */
+    div[data-testid="stForm"], .neumorphic-card {
+        background-color: #212121 !important;
+        border-radius: 20px !important;
+        border: 1px solid rgba(255, 255, 255, 0.04) !important;
+        box-shadow: 8px 8px 16px #151515, -8px -8px 16px #2d2d2d !important;
+        padding: 24px;
+        margin-bottom: 24px;
     }
 
+    /* Pulsanti - Effetto Sollevato */
     div.stButton > button, div.stFormSubmitButton > button {
-        background: #d92525;
-        color: #fff;
-        border: 2px solid #000;
-        border-radius: 4px;
-        padding: 0.6rem 1.2rem;
+        background-color: #212121 !important;
+        color: #B32428 !important;
+        border-radius: 16px !important;
+        border: 1px solid rgba(255, 255, 255, 0.04) !important;
+        box-shadow: 6px 6px 12px #151515, -6px -6px 12px #2d2d2d !important;
         font-family: 'Inter', sans-serif;
-        font-weight: 800;
+        font-weight: 600;
         text-transform: uppercase;
+        letter-spacing: 1px;
         width: 100%;
-        box-shadow: 4px 4px 0px #000;
-        transition: all 0.1s ease-in-out;
-    }
-    div.stButton > button:hover, div.stFormSubmitButton > button:hover {
-        background: #ff3333;
-        color: #fff;
-        transform: translate(-2px, -2px);
-        box-shadow: 6px 6px 0px #000;
-    }
-    div.stButton > button:active {
-        transform: translate(2px, 2px);
-        box-shadow: 0px 0px 0px #000;
+        transition: all 0.2s ease-in-out;
     }
     
+    /* Pulsanti - Hover Effetto Premuto/Scavato */
+    div.stButton > button:hover, div.stFormSubmitButton > button:hover {
+        color: #FFFFFF !important;
+        background-color: #B32428 !important;
+        border-color: #B32428 !important;
+        box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.2), inset -4px -4px 8px rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    div.stButton > button:active {
+        box-shadow: inset 6px 6px 12px #151515, inset -6px -6px 12px #2d2d2d !important;
+        color: #888888 !important;
+    }
+    
+    /* Pulsante Add Minimal */
     .btn-minimal > div > button {
-        padding: 0.2rem 0.5rem !important;
-        font-size: 1.2rem !important;
-        background: #333;
-        color: #fff;
+        padding: 0.4rem 1rem !important;
+        font-size: 0.9rem !important;
+        border-radius: 12px !important;
     }
 
+    /* Metriche (Cruscotto) */
     div[data-testid="stMetricValue"] {
-        color: #fff !important;
-        font-family: 'Permanent Marker', cursive !important;
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
         font-size: 2.2rem !important;
     }
     div[data-testid="stMetricLabel"] {
-        color: #999 !important;
-        font-weight: 800 !important;
+        color: #888888 !important;
+        font-weight: 500 !important;
         text-transform: uppercase;
+        letter-spacing: 1px;
     }
     div[data-testid="metric-container"] {
-        background: #222;
-        border: 2px solid #444;
-        border-left: 6px solid #d92525;
-        padding: 12px;
+        background-color: #212121;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        box-shadow: inset 4px 4px 8px #151515, inset -4px -4px 8px #2d2d2d;
+        padding: 16px;
+        text-align: center;
     }
 
+    /* Campi di Input - Effetto Scavato */
     .stTextInput input, .stSelectbox div div, .stNumberInput input {
-        background-color: #111 !important;
-        color: #fff !important;
-        border: 2px solid #444 !important;
-        border-radius: 4px !important;
-        font-weight: 600;
+        background-color: #212121 !important;
+        color: #E0E0E0 !important;
+        border-radius: 16px !important;
+        border: 1px solid rgba(255, 255, 255, 0.02) !important;
+        box-shadow: inset 6px 6px 12px #151515, inset -6px -6px 12px #2d2d2d !important;
+        padding: 12px 16px !important;
+        font-weight: 500;
     }
+    
     .stTextInput input:focus {
-        border-color: #d92525 !important;
+        border-color: #B32428 !important;
+        box-shadow: inset 6px 6px 12px #151515, inset -6px -6px 12px #2d2d2d, 0 0 10px rgba(179, 36, 40, 0.2) !important;
     }
 
+    /* Barre di Progresso */
     div[data-testid="stProgress"] > div > div > div > div {
-        background: #d92525 !important;
-        border-radius: 2px;
+        background-color: #B32428 !important;
+        border-radius: 10px;
     }
 
+    /* Badge Trofei - Sbloccati */
     .badge-unlocked {
-        padding: 14px 18px;
-        background: #222;
-        border: 2px solid #000;
-        border-left: 8px solid #d92525;
-        margin-bottom: 12px;
-        box-shadow: 4px 4px 0px #000;
+        padding: 18px 24px;
+        background-color: #212121;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-left: 6px solid #B32428;
+        box-shadow: 8px 8px 16px #151515, -8px -8px 16px #2d2d2d;
+        margin-bottom: 16px;
     }
+    /* Badge Trofei - Bloccati (Scavati) */
     .badge-locked {
-        padding: 14px 18px;
-        background: #1a1a1a;
-        border: 2px dashed #444;
-        margin-bottom: 12px;
+        padding: 18px 24px;
+        background-color: #212121;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.02);
+        box-shadow: inset 6px 6px 12px #151515, inset -6px -6px 12px #2d2d2d;
+        margin-bottom: 16px;
         opacity: 0.5;
+    }
+    
+    /* Checkbox */
+    .stCheckbox > label {
+        padding: 8px 0;
     }
     
     #MainMenu {visibility: hidden;}
@@ -228,7 +253,7 @@ def aggiungi_xp(stat, quantita):
     if data["stats"][stat]["xp"] >= xp_necessari:
         data["stats"][stat]["level"] += 1
         data["stats"][stat]["xp"] -= xp_necessari
-        st.toast(f"⚡ LEVEL UP: {stat.upper()} sale al Livello {data['stats'][stat]['level']}! 😸", icon="🆙")
+        st.toast(f"Level UP: {stat.upper()} sale al Livello {data['stats'][stat]['level']}")
         
     livelli = [
         data["stats"].get("disciplina", {}).get("level", 1),
@@ -243,32 +268,31 @@ def aggiungi_xp(stat, quantita):
 if "show_mission_form" not in st.session_state:
     st.session_state.show_mission_form = False
 
-st.sidebar.title("⚡ BYPASS")
-st.sidebar.caption("SISTEMA DI CONTROLLO 🐾")
+st.sidebar.title("BYPASS")
+st.sidebar.caption("SISTEMA DI CONTROLLO OPERATIVO")
 st.sidebar.write("---")
 
 scelta_menu = st.sidebar.radio(
-    "NAVIGAZIONE SYSTEM:",
-    ["📋 BACHECA MISSIONI 🐱", "👤 PROFILO & STATS 🐈", "🚘 GARAGE & RISPARMI 🐈‍⬛"],
+    "Navigazione",
+    ["BACHECA MISSIONI", "PROFILO & STATS", "GARAGE & RISPARMI"],
     label_visibility="collapsed"
 )
 
 st.sidebar.write("---")
-st.sidebar.markdown(f"### 👑 REP GLOBALE: `Lvl. {data['stats']['rep']['level']}`")
+st.sidebar.markdown(f"### REP GLOBALE: Livello {data['stats']['rep']['level']}")
 st.sidebar.progress(min(1.0, (data['stats']['rep'].get('xp', 0)) / (100 * max(1, data['stats']['rep']['level']))))
-st.sidebar.markdown("<center>😸 Meow!</center>", unsafe_allow_html=True)
 
-if scelta_menu == "📋 BACHECA MISSIONI 🐱":
+if scelta_menu == "BACHECA MISSIONI":
     
     col_title, col_btn = st.columns([8, 2])
     with col_title:
-        st.title("⚡ BYPASS")
-        st.markdown("#### `IL TUO RADAR OPERATIVO.` 🐾")
+        st.title("BYPASS")
+        st.markdown("#### RADAR OPERATIVO")
     with col_btn:
         st.write("")
         st.write("")
         st.markdown('<div class="btn-minimal">', unsafe_allow_html=True)
-        if st.button("➕ ADD", use_container_width=True):
+        if st.button("ADD TASK", use_container_width=True):
             st.session_state.show_mission_form = not st.session_state.show_mission_form
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
@@ -277,27 +301,27 @@ if scelta_menu == "📋 BACHECA MISSIONI 🐱":
 
     if st.session_state.show_mission_form:
         with st.form("new_mission_form", clear_on_submit=True):
-            titolo = st.text_input("Cosa devi fare? (es. Bolletta luce, Pulire lettiera 🐈)")
+            titolo = st.text_input("Descrizione Task")
             col_f1, col_f2 = st.columns(2)
             with col_f1:
-                tipo = st.selectbox("Gravosità / Urgenza", [
+                tipo = st.selectbox("Urgenza / Carico", [
                     "Scadenza URGENTE (+40 XP)", 
-                    "I Grossi / Priorità (+30 XP)", 
-                    "Lavoretti / Routine (+15 XP)"
+                    "Progetto / Priorità (+30 XP)", 
+                    "Routine / Manutenzione (+15 XP)"
                 ])
             with col_f2:
-                stat = st.selectbox("Area di potenziamento", [
+                stat = st.selectbox("Area di afferenza", [
                     "disciplina (Scadenze / Burocrazia)", 
-                    "focus (Lavoro / Progetti seri)", 
-                    "skill (Fai-da-te / Manutenzione / Casa)"
+                    "focus (Lavoro / Progetti)", 
+                    "skill (Fai-da-te / Casa)"
                 ])
                 stat_clean = stat.split(" ")[0]
             
             scadenza = None
             if "URGENTE" in tipo:
-                scadenza = st.date_input("Data limite inderogabile:", min_value=date.today())
+                scadenza = st.date_input("Scadenza inderogabile:", min_value=date.today())
                 
-            submit = st.form_submit_button("🔥 INSERISCI A SISTEMA")
+            submit = st.form_submit_button("INSERISCI A SISTEMA")
             
             if submit and titolo:
                 nuova_missione = {
@@ -311,14 +335,14 @@ if scelta_menu == "📋 BACHECA MISSIONI 🐱":
                 data["tasks"].append(nuova_missione)
                 save_data(data)
                 st.session_state.show_mission_form = False
-                st.toast(f"Faccenda '{titolo}' appuntata! 🐾", icon="🚀")
+                st.toast(f"Task registrato: {titolo}")
                 st.rerun()
 
     all_tasks = data.get("tasks", [])
     attive = [t for t in all_tasks if not t.get("completato", False)]
 
     if not attive:
-        st.info("⚡ Nessuna faccenda in sospeso. Il radar è pulito! Tempo per le coccole 🐱")
+        st.info("Nessun task in sospeso. Sistema allineato.")
     else:
         scadenze = [t for t in attive if "URGENTE" in t.get("tipo", "")]
         scadenze.sort(key=lambda x: x.get("scadenza") if x.get("scadenza") else "9999-12-31")
@@ -327,8 +351,8 @@ if scelta_menu == "📋 BACHECA MISSIONI 🐱":
         lista_ordinata = scadenze + grossi + lavoretti
 
         for task in lista_ordinata:
-            t_tipo = task.get("tipo", "Lavoretti / Routine (+15 XP)")
-            t_titolo = task.get("titolo", "Senza Nome")
+            t_tipo = task.get("tipo", "Routine / Manutenzione (+15 XP)")
+            t_titolo = task.get("titolo", "Task")
             t_scadenza = task.get("scadenza")
             t_id = task.get("id", 0)
             t_stat = task.get("stat", "disciplina")
@@ -338,21 +362,21 @@ if scelta_menu == "📋 BACHECA MISSIONI 🐱":
                     scad_date = datetime.strptime(t_scadenza, "%Y-%m-%d").date()
                     giorni_rimasti = (scad_date - date.today()).days
                     if giorni_rimasti <= 0:
-                        label = f"🚨 [SCADUTA / SCADE OGGI] — {t_titolo}"
+                        label = f"[SCADUTA] — {t_titolo}"
                     elif giorni_rimasti == 1:
-                        label = f"⚠️ [SCADE DOMANI] — {t_titolo}"
+                        label = f"[SCADE DOMANI] — {t_titolo}"
                     else:
-                        label = f"⏳ [TRA {giorni_rimasti} GG] — {t_titolo}"
+                        label = f"[{giorni_rimasti} GG RIMASTI] — {t_titolo}"
                 except:
-                    label = f"⏳ [SCADENZA] — {t_titolo}"
+                    label = f"[URGENTE] — {t_titolo}"
                 xp_reward = 40
                 categoria_stat = "urgenti"
             elif "Priorità" in t_tipo:
-                label = f"🔴 [PRIORITÀ] — {t_titolo}"
+                label = f"[PRIORITÀ] — {t_titolo}"
                 xp_reward = 30
                 categoria_stat = "grossi"
             else:
-                label = f"⚪ [ROUTINE] — {t_titolo}"
+                label = f"[ROUTINE] — {t_titolo}"
                 xp_reward = 15
                 categoria_stat = "lavoretti"
                 
@@ -366,81 +390,81 @@ if scelta_menu == "📋 BACHECA MISSIONI 🐱":
                 
                 save_data(data)
                 aggiungi_xp(t_stat, xp_reward)
-                st.toast(f"Fatto! +{xp_reward} XP in {t_stat.upper()} 😸", icon="⚡")
+                st.toast(f"Task completato (+{xp_reward} XP in {t_stat.upper()})")
                 st.rerun()
 
-elif scelta_menu == "👤 PROFILO & STATS 🐈":
-    st.title("👤 STATO OPERATIVO 🐈")
-    st.markdown(f"#### LIVELLO REP: `{data['stats']['rep']['level']}`")
+elif scelta_menu == "PROFILO & STATS":
+    st.title("STATO OPERATIVO")
+    st.markdown(f"#### LIVELLO REP: {data['stats']['rep']['level']}")
     st.write("---")
     
-    st.markdown("### 📈 CRUSCOTTO FACCENDE")
+    st.markdown("### CRUSCOTTO ANALITICO")
     m_stats = data.get("mission_stats", {"totale": 0, "urgenti": 0, "grossi": 0, "lavoretti": 0})
     
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-    col_m1.metric("🔥 Svolte", m_stats.get("totale", 0))
-    col_m2.metric("⚠️ Scadenze", m_stats.get("urgenti", 0))
-    col_m3.metric("🔴 I Grossi", m_stats.get("grossi", 0))
-    col_m4.metric("⚪ Routine", m_stats.get("lavoretti", 0))
+    col_m1.metric("Task Totali", m_stats.get("totale", 0))
+    col_m2.metric("Scadenze", m_stats.get("urgenti", 0))
+    col_m3.metric("Progetti", m_stats.get("grossi", 0))
+    col_m4.metric("Routine", m_stats.get("lavoretti", 0))
     st.write("---")
     
-    st.markdown("### 📊 PARAMETRI")
+    st.markdown("### PARAMETRI VITALI")
     for stat in ["disciplina", "focus", "skill"]:
         info = data["stats"].get(stat, {"xp": 0, "level": 1, "last_active": str(date.today())})
         livello_attuale = info.get("level", 1)
         xp_attuali = info.get("xp", 0)
         prossimo_livello = 100 * livello_attuale
         
-        st.markdown(f"**{stat.upper()}** — `Lvl {livello_attuale}`")
+        st.markdown(f"**{stat.upper()}** — Livello {livello_attuale}")
         st.progress(min(1.0, xp_attuali / prossimo_livello))
         st.caption(f"Esperienza: {xp_attuali}/{prossimo_livello} XP")
         st.write("")
 
     st.write("---")
-    st.markdown("### 🏆 BACHECA TROFEI 🐾")
+    st.markdown("### TRAGUARDI")
     streak = data.get("bar_streak", 0)
     badge_list = [
-        {"nome": "Conti Puliti 🐈", "desc": "Risolvi 3 scadenze urgenti.", "sbloccato": m_stats.get("urgenti", 0) >= 3},
-        {"nome": "Macchina da Guerra 🐯", "desc": "Porta a termine 10 faccende totali.", "sbloccato": m_stats.get("totale", 0) >= 10},
-        {"nome": "Sotto i Radar 😼", "desc": "5 giorni di fila niente bar.", "sbloccato": streak >= 5},
-        {"nome": "Infiltrato Invisibile 🐾", "desc": "14 giorni di fila senza micro-spese.", "sbloccato": streak >= 14},
+        {"nome": "Efficienza Fiscale", "desc": "Risolvi 3 scadenze urgenti.", "sbloccato": m_stats.get("urgenti", 0) >= 3},
+        {"nome": "Inarrestabile", "desc": "Porta a termine 10 task totali.", "sbloccato": m_stats.get("totale", 0) >= 10},
+        {"nome": "Fondo Solido", "desc": "5 giorni consecutivi senza spese accessorie.", "sbloccato": streak >= 5},
+        {"nome": "Ascetismo Finanziario", "desc": "14 giorni consecutivi senza micro-spese.", "sbloccato": streak >= 14},
     ]
     
     for b in badge_list:
         if b["sbloccato"]:
-            st.markdown(f"<div class='badge-unlocked'>👑 <b>{b['nome']}</b><br><small>{b['desc']}</small></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='badge-unlocked'><b>{b['nome']}</b><br><span style='color:#888;'>{b['desc']}</span></div>", unsafe_allow_html=True)
         else:
-            st.markdown(f"<div class='badge-locked'>🔒 <b>{b['nome']}</b><br><small>{b['desc']}</small></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='badge-locked'><b>{b['nome']}</b><br><span style='color:#666;'>{b['desc']}</span></div>", unsafe_allow_html=True)
 
-elif scelta_menu == "🚘 GARAGE & RISPARMI 🐈‍⬛":
-    st.title("🚘 IL GARAGE 🐈‍⬛")
+elif scelta_menu == "GARAGE & RISPARMI":
+    st.title("GESTIONE FONDI")
     st.write("---")
     
-    st.markdown("### 🚭 Sfida del Bar")
+    st.markdown("### CONTROLLO SPESE (DAILY CHECK)")
     today_str = str(date.today())
     last_check = data.get("last_bar_check", "")
     
     if last_check != today_str:
-        st.info("⚡ Hai speso soldi al bar oggi?")
+        st.info("Hai evitato spese superflue (es. bar) oggi?")
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("SONO RIMASTO PULITO 💸 😸"):
+            if st.button("NESSUNA SPESA"):
                 data["bar_streak"] += 1
                 data["last_bar_check"] = today_str
                 save_data(data)
                 aggiungi_xp("disciplina", 15)
                 st.rerun()
         with col2:
-            if st.button("SÌ, HO SPESO. 😿"):
+            if st.button("SPESA EFFETTUATA"):
                 data["bar_streak"] = 0
                 data["last_bar_check"] = today_str
                 save_data(data)
                 st.rerun()
     else:
-        st.markdown(f"🔥 **Scia senza bar:** `{data['bar_streak']} giorni` 🐾")
+        st.markdown(f"**Scia virtuosa attuale:** `{data['bar_streak']} giorni consecutivi`")
         
     st.write("---")
-    st.markdown("### 📦 OBIETTIVI")
+    st.markdown("### OBIETTIVI FINANZIARI")
     
     if "show_garage_form" not in st.session_state:
         st.session_state.show_garage_form = False
@@ -448,7 +472,7 @@ elif scelta_menu == "🚘 GARAGE & RISPARMI 🐈‍⬛":
     col_g_title, col_g_btn = st.columns([8, 2])
     with col_g_btn:
         st.markdown('<div class="btn-minimal">', unsafe_allow_html=True)
-        if st.button("➕ ADD", key="toggle_garage", use_container_width=True):
+        if st.button("ADD TARGET", key="toggle_garage", use_container_width=True):
             st.session_state.show_garage_form = not st.session_state.show_garage_form
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
@@ -457,10 +481,10 @@ elif scelta_menu == "🚘 GARAGE & RISPARMI 🐈‍⬛":
         with st.form("new_garage_item"):
             col_g1, col_g2 = st.columns([2, 1])
             with col_g1:
-                oggetto = st.text_input("Oggetto (es. Cibo per gatti 🐟):")
+                oggetto = st.text_input("Descrizione Obiettivo:")
             with col_g2:
-                costo = st.number_input("Costo (€):", min_value=1)
-            submit_item = st.form_submit_button("🔥 METTI IN CODA")
+                costo = st.number_input("Target Budget (€):", min_value=1)
+            submit_item = st.form_submit_button("AGGIUNGI OBIETTIVO")
             if submit_item and oggetto and costo:
                 data["garage"].append({
                     "oggetto": oggetto, "costo": costo, "risparmiati": 0
@@ -470,22 +494,22 @@ elif scelta_menu == "🚘 GARAGE & RISPARMI 🐈‍⬛":
                 st.rerun()
                 
     if not data["garage"]:
-        st.info("Nessun obiettivo nel garage. 🐱")
+        st.info("Nessun obiettivo di risparmio impostato.")
     else:
         for idx, item in enumerate(data["garage"]):
             costo_tot = item["costo"]
             risp = item["risparmiati"]
             percentuale = min(1.0, risp / costo_tot)
             
-            st.markdown(f"##### 📦 {item['oggetto']} — `{risp}€` su `{costo_tot}€`")
+            st.markdown(f"##### {item['oggetto']} — {risp}€ / {costo_tot}€")
             st.progress(percentuale)
             
             col_dep1, col_dep2 = st.columns([2, 1])
             with col_dep1:
-                deposito = st.number_input("Quota (€):", min_value=1, key=f"dep_val_{idx}")
+                deposito = st.number_input("Importo da allocare (€):", min_value=1, key=f"dep_val_{idx}")
             with col_dep2:
                 st.write("") 
-                if st.button("DEPOSITA 🐾", key=f"dep_btn_{idx}"):
+                if st.button("ALLOCA FONDI", key=f"dep_btn_{idx}"):
                     item["risparmiati"] += deposito
                     save_data(data)
                     if item["risparmiati"] >= item["costo"]:
