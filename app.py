@@ -479,7 +479,7 @@ def load_data():
     }
 
     try:
-        req = requests.get(URL, headers=HEADERS)
+        req = requests.get(URL, headers=HEADERS, timeout=8)
         if req.status_code == 200:
             db = req.json().get("record", default_data)
             if "garage" not in db: db["garage"] = []
@@ -489,19 +489,25 @@ def load_data():
             if "stats" not in db: db["stats"] = default_data["stats"]
             return db
         else:
+            st.warning(f"Connessione a JSONBin non riuscita (codice {req.status_code}). Uso dati vuoti temporanei.")
             return default_data
-    except Exception:
+    except requests.exceptions.Timeout:
+        st.warning("JSONBin non ha risposto in tempo. Uso dati vuoti temporanei.")
+        return default_data
+    except Exception as e:
+        st.warning(f"Errore di connessione a JSONBin: {e}. Uso dati vuoti temporanei.")
         return default_data
 
 
 def save_data(data):
     try:
-        requests.put(URL, json=data, headers=HEADERS)
+        requests.put(URL, json=data, headers=HEADERS, timeout=8)
     except Exception:
         pass
 
 
-data = load_data()
+with st.spinner("Sincronizzazione dati..."):
+    data = load_data()
 
 
 def applica_decadimento(data):
