@@ -33,306 +33,401 @@ HEADERS = {
 
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+    :root {
+        --ink: #17140F;
+        --panel: #221D16;
+        --panel-soft: #2A2419;
+        --brass: #C9A227;
+        --brass-dim: #8F7620;
+        --moss: #6B8F71;
+        --rust: #B5453A;
+        --ivory: #F0EAE0;
+        --muted: #9C9484;
+    }
 
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif !important;
-        color: #F5F5FA !important;
+        color: var(--ivory) !important;
     }
 
-    /* --- SFONDO ANIMATO A STRATI --- */
+    /* --- SFONDO: espresso caldo, vignette naturale, quasi immobile --- */
     .stApp {
-        background: linear-gradient(-45deg, #0B0B1A, #1A0B2E, #0B1120, #16092B);
-        background-size: 400% 400%;
-        animation: gradientFlow 22s ease infinite;
+        background:
+            radial-gradient(circle at 22% -10%, rgba(201, 162, 39, 0.07), transparent 55%),
+            radial-gradient(circle at 85% 105%, rgba(107, 143, 113, 0.05), transparent 55%),
+            var(--ink);
         background-attachment: fixed !important;
-        padding-bottom: 110px !important;
+        padding-bottom: 118px !important;
         position: relative;
-        overflow-x: hidden;
     }
 
-    @keyframes gradientFlow {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-
-    /* Bagliori fluttuanti (glow orbs) sopra il gradiente */
-    .stApp::before, .stApp::after {
-        content: "";
-        position: fixed;
-        border-radius: 50%;
-        filter: blur(60px);
-        opacity: 0.35;
-        z-index: 0;
-        pointer-events: none;
-    }
-
-    .stApp::before {
-        width: 420px;
-        height: 420px;
-        top: -120px;
-        left: -100px;
-        background: radial-gradient(circle, #FF3366 0%, transparent 70%);
-        animation: floatOrb1 16s ease-in-out infinite;
-    }
-
-    .stApp::after {
-        width: 480px;
-        height: 480px;
-        bottom: -140px;
-        right: -120px;
-        background: radial-gradient(circle, #00FFFF 0%, transparent 70%);
-        animation: floatOrb2 20s ease-in-out infinite;
-    }
-
-    @keyframes floatOrb1 {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        50% { transform: translate(60px, 80px) scale(1.15); }
-    }
-
-    @keyframes floatOrb2 {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        50% { transform: translate(-50px, -60px) scale(1.1); }
-    }
-
-    /* Contenuto principale sopra i layer di sfondo */
     .main .block-container {
         position: relative;
         z-index: 1;
+        padding-top: 2rem;
     }
 
-    section[data-testid="stSidebar"] {
-        display: none !important;
-    }
+    section[data-testid="stSidebar"] { display: none !important; }
 
     h1, h2, h3, h4, h5, h6 {
-        font-family: 'Inter', sans-serif !important;
-        color: #FFFFFF !important;
+        font-family: 'Fraunces', serif !important;
+        color: var(--ivory) !important;
         font-weight: 600 !important;
-        letter-spacing: -0.5px;
+        letter-spacing: -0.3px;
     }
 
     h1 {
-        background: linear-gradient(90deg, #FF3366, #FF9933, #00FFFF);
-        background-size: 200% auto;
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: shimmerTitle 6s linear infinite;
-        font-weight: 800 !important;
-    }
-
-    @keyframes shimmerTitle {
-        0% { background-position: 0% center; }
-        100% { background-position: 200% center; }
+        color: var(--brass) !important;
+        font-weight: 700 !important;
+        font-size: 2.4rem !important;
+        margin-bottom: 0.2rem !important;
+        border-bottom: 1px solid rgba(201, 162, 39, 0.22);
+        padding-bottom: 10px;
     }
 
     h4 {
-        color: #FF6B93 !important;
+        font-family: 'Inter', sans-serif !important;
+        color: var(--muted) !important;
         text-transform: uppercase;
-        font-size: 0.85rem !important;
-        letter-spacing: 2.5px;
-        opacity: 0.9;
+        font-size: 0.78rem !important;
+        letter-spacing: 3px;
+        font-weight: 500 !important;
     }
 
-    /* --- CARD PIU' LEGGERE (glass morbido, meno bordi netti) --- */
-    div[data-testid="stForm"], .neumorphic-card {
-        background: rgba(255, 255, 255, 0.035) !important;
-        backdrop-filter: blur(16px) saturate(140%) !important;
-        -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
-        border-radius: 22px !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25) !important;
-        padding: 24px;
-        margin-bottom: 24px;
-        animation: fadeSlideIn 0.5s ease-out;
+    h3 {
+        font-size: 1.15rem !important;
+        color: var(--ivory) !important;
     }
 
+    /* --- NUMERI E DATI IN MONOSPACE --- */
+    .num, .medallion-level, .medallion-xp, .stat-value {
+        font-family: 'IBM Plex Mono', monospace !important;
+    }
+
+    /* --- PANNELLI / FORM --- */
+    div[data-testid="stForm"], .card-panel {
+        background: var(--panel) !important;
+        border-radius: 14px !important;
+        border: 1px solid rgba(201, 162, 39, 0.14) !important;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4) !important;
+        padding: 22px;
+        margin-bottom: 20px;
+    }
+
+    /* --- TASK CARD --- */
     .task-card {
-        background: rgba(255, 255, 255, 0.025);
-        backdrop-filter: blur(14px) saturate(130%);
-        border-radius: 18px;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        padding: 16px 20px;
-        margin-bottom: 16px;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.22);
+        background: var(--panel);
+        border-radius: 14px;
+        border: 1px solid rgba(240, 234, 224, 0.06);
+        padding: 16px 18px;
+        margin-bottom: 14px;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        transition: transform 0.25s ease, box-shadow 0.25s ease;
-        animation: fadeSlideIn 0.45s ease-out;
+        gap: 6px;
     }
 
-    .task-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    .task-card-urgent { border-left: 3px solid var(--rust); }
+    .task-card-project { border-left: 3px solid var(--brass); }
+    .task-card-routine { border-left: 3px solid var(--moss); }
+
+    .task-eyebrow {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 7px;
     }
 
-    @keyframes fadeSlideIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+    .task-eyebrow.urgent { color: var(--rust); }
+    .task-eyebrow.project { color: var(--brass); }
+    .task-eyebrow.routine { color: var(--moss); }
+
+    .urgent-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--rust);
+        display: inline-block;
+        animation: dotBreathe 2.4s ease-in-out infinite;
     }
 
-    .task-card-urgent {
-        border-left: 4px solid #FF3366;
-        background: rgba(255, 51, 102, 0.035);
-        animation: fadeSlideIn 0.45s ease-out, pulseUrgent 3s ease-in-out infinite;
+    @keyframes dotBreathe {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 1; }
     }
 
-    @keyframes pulseUrgent {
-        0%, 100% { box-shadow: 0 4px 24px rgba(255, 51, 102, 0.10); }
-        50% { box-shadow: 0 4px 30px rgba(255, 51, 102, 0.28); }
+    .task-title {
+        font-family: 'Fraunces', serif;
+        font-size: 1.08rem;
+        font-weight: 500;
+        color: var(--ivory);
+        margin: 2px 0 4px 0;
     }
 
-    .task-card-project {
-        border-left: 4px solid #FF9933;
-    }
-
-    .task-card-routine {
-        border-left: 4px solid #00FFFF;
-    }
-
+    /* --- BOTTONI --- */
     div.stButton > button, div.stFormSubmitButton > button {
-        background: linear-gradient(45deg, #FF3366, #FF9933) !important;
-        color: #FFFFFF !important;
-        border-radius: 14px !important;
+        background: linear-gradient(160deg, var(--brass), var(--brass-dim)) !important;
+        color: var(--ink) !important;
+        border-radius: 10px !important;
         border: none !important;
-        box-shadow: 0 0 12px rgba(255, 51, 102, 0.35) !important;
+        box-shadow: none !important;
         font-family: 'Inter', sans-serif;
         font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.3px;
         width: 100%;
-        transition: all 0.25s ease-in-out;
+        transition: transform 0.18s ease, filter 0.18s ease;
     }
 
     div.stButton > button:hover, div.stFormSubmitButton > button:hover {
-        background: linear-gradient(45deg, #FF9933, #FF3366) !important;
-        box-shadow: 0 0 22px rgba(255, 51, 102, 0.6) !important;
-        transform: translateY(-2px) scale(1.01);
+        filter: brightness(1.08);
+        transform: translateY(-1px);
     }
 
     div.stButton > button:active, div.stFormSubmitButton > button:active {
-        transform: translateY(0) scale(0.98);
+        transform: translateY(0);
+        filter: brightness(0.96);
     }
 
-    .nav-active > div > button {
-        background: linear-gradient(45deg, #00FFFF, #0088FF) !important;
-        box-shadow: 0 0 20px rgba(0, 255, 255, 0.55) !important;
+    .btn-ghost > div > button {
+        background: transparent !important;
+        color: var(--brass) !important;
+        border: 1px solid rgba(201, 162, 39, 0.35) !important;
+        padding: 0.35rem 0.9rem !important;
+        font-size: 0.82rem !important;
     }
 
-    .btn-minimal > div > button {
-        padding: 0.3rem 0.8rem !important;
-        font-size: 0.8rem !important;
-        border-radius: 10px !important;
+    .btn-danger-text > div > button {
+        background: transparent !important;
+        color: var(--rust) !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-weight: 500 !important;
+        text-align: left !important;
     }
 
-    .btn-danger > div > button {
-        background: linear-gradient(45deg, #FF5757, #99001F) !important;
-        box-shadow: 0 0 8px rgba(255, 0, 0, 0.25) !important;
+    .btn-confirm-text > div > button {
+        background: transparent !important;
+        color: var(--moss) !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-weight: 500 !important;
+        text-align: left !important;
     }
 
-    /* --- MENU A TENDINA COMPATTO SULLE TASK CARD --- */
+    /* --- MENU AZIONI SULLA TASK (popover a tendina) --- */
     .task-menu {
         display: flex;
         justify-content: flex-end;
-        margin-top: -6px;
+        margin-top: -4px;
     }
 
     .task-menu div[data-testid="stPopover"] > button {
-        background: rgba(255, 255, 255, 0.06) !important;
-        color: #FFFFFF !important;
-        border: 1px solid rgba(255, 255, 255, 0.10) !important;
-        border-radius: 10px !important;
+        background: transparent !important;
+        color: var(--muted) !important;
+        border: 1px solid rgba(240, 234, 224, 0.12) !important;
+        border-radius: 8px !important;
         box-shadow: none !important;
         font-weight: 700;
-        padding: 0.25rem 0.6rem !important;
-        text-transform: none !important;
-        letter-spacing: 0 !important;
+        padding: 0.15rem 0.55rem !important;
         min-height: 0 !important;
     }
 
     .task-menu div[data-testid="stPopover"] > button:hover {
-        background: rgba(255, 255, 255, 0.12) !important;
-        box-shadow: none !important;
+        border-color: rgba(201, 162, 39, 0.4) !important;
+        color: var(--brass) !important;
         transform: none;
     }
 
     div[data-testid="stPopoverBody"] {
-        background: rgba(20, 12, 35, 0.92) !important;
-        backdrop-filter: blur(18px) saturate(150%) !important;
-        border-radius: 16px !important;
-        border: 1px solid rgba(255, 255, 255, 0.10) !important;
-        padding: 10px !important;
-        gap: 6px !important;
+        background: var(--panel-soft) !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(201, 162, 39, 0.18) !important;
+        padding: 8px !important;
+        gap: 2px !important;
     }
 
     div[data-testid="stPopoverBody"] button {
-        text-transform: none !important;
-        letter-spacing: 0.2px !important;
         font-size: 0.85rem !important;
-        padding: 0.45rem 0.8rem !important;
-        box-shadow: none !important;
+        padding: 0.4rem 0.5rem !important;
     }
 
+    /* --- STAT BOX (Profilo) --- */
     .stats-container {
         display: flex;
         gap: 10px;
         width: 100%;
-        margin-bottom: 20px;
+        margin-bottom: 18px;
     }
     .stat-box {
         flex: 1;
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(12px);
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.07);
+        background: var(--panel);
+        border-radius: 12px;
+        border: 1px solid rgba(240, 234, 224, 0.06);
         padding: 12px 6px;
         text-align: center;
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
-        transition: transform 0.2s ease;
-    }
-    .stat-box:hover {
-        transform: translateY(-2px);
     }
     .stat-box .stat-value {
-        color: #00FFFF;
-        font-weight: 700;
-        font-size: 1.35rem;
-        text-shadow: 0 0 10px rgba(0, 255, 255, 0.35);
+        color: var(--brass);
+        font-weight: 600;
+        font-size: 1.3rem;
         line-height: 1.2;
     }
     .stat-box .stat-label {
-        color: #C9C9D6;
+        color: var(--muted);
+        font-family: 'Inter', sans-serif;
         font-weight: 500;
-        font-size: 0.65rem;
+        font-size: 0.62rem;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.6px;
         margin-top: 4px;
     }
 
+    /* --- MEDAGLIONI CIRCOLARI DI LIVELLO --- */
+    .medallions-row {
+        display: flex;
+        justify-content: space-around;
+        gap: 12px;
+        margin: 8px 0 22px 0;
+        flex-wrap: wrap;
+    }
+
+    .medallion-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .medallion-ring {
+        width: 104px;
+        height: 104px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+    }
+
+    .medallion-face {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: var(--panel);
+        border: 1px solid rgba(201, 162, 39, 0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .medallion-level {
+        font-size: 1.7rem;
+        font-weight: 600;
+        color: var(--ivory);
+        line-height: 1;
+    }
+
+    .medallion-xp {
+        font-size: 0.58rem;
+        color: var(--muted);
+        margin-top: 3px;
+        letter-spacing: 0.3px;
+    }
+
+    .medallion-tag {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+
+    .medallion-hero .medallion-ring { width: 140px; height: 140px; }
+    .medallion-hero .medallion-level { font-size: 2.3rem; }
+
+    /* --- BADGE / TRAGUARDI --- */
+    .badge-unlocked {
+        padding: 16px 20px;
+        background: rgba(201, 162, 39, 0.06);
+        border-radius: 12px;
+        border: 1px solid rgba(201, 162, 39, 0.28);
+        border-left: 4px solid var(--brass);
+        margin-bottom: 14px;
+    }
+
+    .badge-locked {
+        padding: 16px 20px;
+        background: rgba(240, 234, 224, 0.015);
+        border-radius: 12px;
+        border: 1px dashed rgba(240, 234, 224, 0.08);
+        margin-bottom: 14px;
+        opacity: 0.55;
+    }
+
+    .badge-unlocked b, .badge-locked b {
+        font-family: 'Fraunces', serif;
+        font-weight: 600;
+    }
+
+    /* --- PROGRESS BAR --- */
+    div[data-testid="stProgress"] > div > div > div > div {
+        background: var(--brass) !important;
+        border-radius: 8px;
+    }
+    div[data-testid="stProgress"] > div > div > div {
+        background: rgba(240, 234, 224, 0.08) !important;
+        border-radius: 8px;
+    }
+
+    /* --- INPUT --- */
+    .stTextInput input, .stSelectbox div div, .stNumberInput input {
+        background: var(--panel-soft) !important;
+        color: var(--ivory) !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(240, 234, 224, 0.10) !important;
+        padding: 10px 14px !important;
+        font-weight: 500;
+    }
+
+    .stTextInput input:focus {
+        border-color: var(--brass) !important;
+        box-shadow: none !important;
+    }
+
+    /* --- STORICO --- */
+    .history-row {
+        font-family: 'Inter', sans-serif;
+        color: var(--muted);
+        font-size: 0.9rem;
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(240, 234, 224, 0.05);
+    }
+    .history-row .tag {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.68rem;
+        color: var(--brass-dim);
+        margin-left: 6px;
+    }
+
+    /* --- NAVIGAZIONE INFERIORE --- */
     .fixed-bottom-nav {
         position: fixed;
         bottom: 0;
         left: 0;
         width: 100%;
-        background: rgba(15, 8, 30, 0.85);
-        backdrop-filter: blur(24px) saturate(160%);
-        -webkit-backdrop-filter: blur(24px) saturate(160%);
-        border-top: 1px solid rgba(255, 255, 255, 0.10);
-        box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+        background: rgba(23, 20, 15, 0.94);
+        border-top: 1px solid rgba(201, 162, 39, 0.14);
+        box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.45);
         z-index: 999999;
-        padding: 8px 0;
-    }
-
-    .fixed-bottom-nav div.stButton > button {
-        box-shadow: none !important;
-        padding: 0.4rem 0 !important;
-    }
-
-    .fixed-bottom-nav .nav-active > div > button {
-        box-shadow: 0 0 14px rgba(0, 255, 255, 0.45) !important;
+        padding: 10px 0;
     }
 
     .fixed-bottom-inner {
@@ -343,54 +438,30 @@ st.markdown("""
         align-items: center;
     }
 
-    div[data-testid="stProgress"] > div > div > div > div {
-        background: linear-gradient(90deg, #FF3366, #00FFFF) !important;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 255, 255, 0.45);
-        transition: width 0.6s ease-in-out;
+    .fixed-bottom-nav div.stButton > button {
+        background: transparent !important;
+        color: var(--muted) !important;
+        box-shadow: none !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 600 !important;
+        font-size: 0.78rem !important;
+        letter-spacing: 1.5px !important;
+        text-transform: uppercase !important;
+        padding: 0.4rem 0 !important;
+        border-radius: 0 !important;
+        border-bottom: 2px solid transparent !important;
     }
 
-    .badge-unlocked {
-        padding: 18px 24px;
-        background: rgba(255, 255, 255, 0.04);
-        backdrop-filter: blur(12px);
-        border-radius: 20px;
-        border: 1px solid rgba(0, 255, 255, 0.25);
-        border-left: 5px solid #00FFFF;
-        box-shadow: 0 8px 24px rgba(0, 255, 255, 0.10);
-        margin-bottom: 16px;
-        animation: fadeSlideIn 0.5s ease-out;
-    }
-
-    .badge-locked {
-        padding: 18px 24px;
-        background: rgba(0, 0, 0, 0.15);
-        backdrop-filter: blur(8px);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        margin-bottom: 16px;
-        opacity: 0.45;
-    }
-
-    .stTextInput input, .stSelectbox div div, .stNumberInput input {
-        background: rgba(0, 0, 0, 0.25) !important;
-        color: #FFFFFF !important;
-        border-radius: 16px !important;
-        border: 1px solid rgba(255, 255, 255, 0.10) !important;
-        padding: 12px 16px !important;
-        font-weight: 500;
-        transition: border-color 0.25s ease, box-shadow 0.25s ease;
-    }
-
-    .stTextInput input:focus {
-        border-color: #00FFFF !important;
-        box-shadow: 0 0 12px rgba(0, 255, 255, 0.35) !important;
+    .fixed-bottom-nav .nav-active > div > button {
+        color: var(--brass) !important;
+        border-bottom: 2px solid var(--brass) !important;
     }
 
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
+
 
 def load_data():
     default_data = {
@@ -422,13 +493,16 @@ def load_data():
     except Exception:
         return default_data
 
+
 def save_data(data):
     try:
         requests.put(URL, json=data, headers=HEADERS)
     except Exception:
         pass
 
+
 data = load_data()
+
 
 def applica_decadimento(data):
     today = date.today()
@@ -458,7 +532,9 @@ def applica_decadimento(data):
     if modificato:
         save_data(data)
 
+
 applica_decadimento(data)
+
 
 def aggiungi_xp(stat, quantita):
     if stat == "fisico": stat = "disciplina"
@@ -474,7 +550,7 @@ def aggiungi_xp(stat, quantita):
     if data["stats"][stat]["xp"] >= xp_necessari:
         data["stats"][stat]["level"] += 1
         data["stats"][stat]["xp"] -= xp_necessari
-        st.toast(f"Level UP: {stat.upper()} sale al Livello {data['stats'][stat]['level']}")
+        st.toast(f"Livello superato: {stat.upper()} sale al Livello {data['stats'][stat]['level']}")
 
     livelli = [
         data["stats"].get("disciplina", {}).get("level", 1),
@@ -486,6 +562,23 @@ def aggiungi_xp(stat, quantita):
 
     save_data(data)
 
+
+def medaglione_html(level, xp, xp_max, label, hero=False):
+    pct = max(0, min(100, int((xp / xp_max) * 100))) if xp_max else 0
+    wrap_class = "medallion-wrap medallion-hero" if hero else "medallion-wrap"
+    return f"""
+    <div class="{wrap_class}">
+        <div class="medallion-ring" style="background: conic-gradient(#C9A227 {pct}%, rgba(240,234,224,0.08) {pct}%);">
+            <div class="medallion-face">
+                <div class="medallion-level">{level}</div>
+                <div class="medallion-xp">{xp}/{xp_max} XP</div>
+            </div>
+        </div>
+        <div class="medallion-tag">{label}</div>
+    </div>
+    """
+
+
 if "show_mission_form" not in st.session_state:
     st.session_state.show_mission_form = False
 
@@ -494,25 +587,23 @@ if "active_tab" not in st.session_state:
 
 # --- RENDER TAB: BACHECA (RADAR OPERATIVO) ---
 if st.session_state.active_tab == "bacheca":
-    col_title, col_btn = st.columns([8, 2])
+    col_title, col_btn = st.columns([8, 3])
     with col_title:
         st.title("BYPASS")
-        st.markdown("#### RADAR OPERATIVO")
+        st.markdown("#### Radar Operativo")
     with col_btn:
         st.write("")
         st.write("")
-        st.markdown('<div class="btn-minimal">', unsafe_allow_html=True)
-        if st.button("ADD", use_container_width=True):
+        st.markdown('<div class="btn-ghost">', unsafe_allow_html=True)
+        if st.button("+ Nuova", use_container_width=True):
             st.session_state.show_mission_form = not st.session_state.show_mission_form
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    st.write("---")
-
     # Form di Inserimento Missione
     if st.session_state.show_mission_form:
         with st.form("new_mission_form", clear_on_submit=True):
-            st.markdown("**NUOVA MISSIONE OPERATIVA**")
+            st.markdown("**Nuova missione operativa**")
             titolo = st.text_input("Descrizione Task")
             col_f1, col_f2 = st.columns(2)
             with col_f1:
@@ -534,9 +625,9 @@ if st.session_state.active_tab == "bacheca":
                 scadenza = st.date_input("Scadenza inderogabile:", min_value=date.today())
 
             xp_anteprima = 40 if "URGENTE" in tipo else (30 if "Priorità" in tipo else 15)
-            st.caption(f"Ricompensa stimata: `{xp_anteprima} XP` nell'area `{stat_clean.upper()}`")
+            st.caption(f"Ricompensa stimata: {xp_anteprima} XP nell'area {stat_clean.upper()}")
 
-            submit = st.form_submit_button("INSERISCI A SISTEMA")
+            submit = st.form_submit_button("Inserisci a sistema")
 
             if submit and titolo:
                 nuova_missione = {
@@ -550,7 +641,7 @@ if st.session_state.active_tab == "bacheca":
                 data["tasks"].append(nuova_missione)
                 save_data(data)
                 st.session_state.show_mission_form = False
-                st.success("Task registrato nel radar!")
+                st.success("Task registrato nel radar.")
                 st.rerun()
 
     all_tasks = data.get("tasks", [])
@@ -559,7 +650,6 @@ if st.session_state.active_tab == "bacheca":
     if not attive:
         st.info("Nessun task in sospeso. Sistema allineato.")
     else:
-        # Filtri rapidi puliti
         col_f_a, col_f_b = st.columns(2)
         with col_f_a:
             filtro_tipo = st.selectbox("Filtra per Tipo:", ["Tutti", "Scadenze Urgenti", "Progetti", "Routine"])
@@ -579,7 +669,6 @@ if st.session_state.active_tab == "bacheca":
 
         st.write("")
 
-        # Render delle Card Interattive per ogni task
         for task in task_filtrati:
             t_id = task.get("id")
             t_titolo = task.get("titolo")
@@ -587,39 +676,47 @@ if st.session_state.active_tab == "bacheca":
             t_stat = task.get("stat", "disciplina")
             t_scadenza = task.get("scadenza")
 
-            # Determinazione classe CSS e badge in base al tipo
             if "URGENTE" in t_tipo:
                 card_class = "task-card task-card-urgent"
+                eyebrow_class = "task-eyebrow urgent"
                 badge_text = "URGENTE"
                 xp_reward = 40
                 cat_stat = "urgenti"
+                dot_html = '<span class="urgent-dot"></span>'
                 if t_scadenza:
                     try:
                         giorni = (datetime.strptime(t_scadenza, "%Y-%m-%d").date() - date.today()).days
                         badge_text = f"SCADUTA ({t_scadenza})" if giorni < 0 else f"SCADE TRA {giorni} GG"
-                    except:
+                    except Exception:
                         pass
             elif "Priorità" in t_tipo:
                 card_class = "task-card task-card-project"
+                eyebrow_class = "task-eyebrow project"
                 badge_text = "PROGETTO"
                 xp_reward = 30
                 cat_stat = "grossi"
+                dot_html = ""
             else:
                 card_class = "task-card task-card-routine"
+                eyebrow_class = "task-eyebrow routine"
                 badge_text = "ROUTINE"
                 xp_reward = 15
                 cat_stat = "lavoretti"
+                dot_html = ""
 
-            # Layout Card con Colonne per Pulsanti Azione (Completa / Elimina)
             st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
-            st.markdown(f"<div style='font-size:0.7rem; color:#00FFFF; font-weight:700; letter-spacing:1px;'>{badge_text} • AREA: {t_stat.upper()} (+{xp_reward} XP)</div>", unsafe_allow_html=True)
-            st.markdown(f"<div style='font-size:1.05rem; font-weight:600; color:#FFFFFF; margin: 4px 0;'>{t_titolo}</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<div class='{eyebrow_class}'>{dot_html}{badge_text} · {t_stat.upper()} · +{xp_reward} XP</div>",
+                unsafe_allow_html=True
+            )
+            st.markdown(f"<div class='task-title'>{t_titolo}</div>", unsafe_allow_html=True)
 
             col_spacer, col_menu = st.columns([5, 1])
             with col_menu:
                 st.markdown('<div class="task-menu">', unsafe_allow_html=True)
                 with st.popover("⋮", use_container_width=True):
-                    if st.button("✅ Completa", key=f"comp_{t_id}", use_container_width=True):
+                    st.markdown('<div class="btn-confirm-text">', unsafe_allow_html=True)
+                    if st.button("✓  Completa", key=f"comp_{t_id}", use_container_width=True):
                         for item in data["tasks"]:
                             if item.get("id") == t_id:
                                 item["completato"] = True
@@ -629,8 +726,9 @@ if st.session_state.active_tab == "bacheca":
                         aggiungi_xp(t_stat, xp_reward)
                         st.toast(f"Missione completata (+{xp_reward} XP in {t_stat.upper()})")
                         st.rerun()
-                    st.markdown('<div class="btn-danger">', unsafe_allow_html=True)
-                    if st.button("🗑️ Elimina", key=f"del_{t_id}", use_container_width=True):
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    st.markdown('<div class="btn-danger-text">', unsafe_allow_html=True)
+                    if st.button("✕  Elimina", key=f"del_{t_id}", use_container_width=True):
                         data["tasks"] = [item for item in data["tasks"] if item.get("id") != t_id]
                         save_data(data)
                         st.rerun()
@@ -641,11 +739,17 @@ if st.session_state.active_tab == "bacheca":
 
 # --- RENDER TAB: PROFILO ---
 elif st.session_state.active_tab == "profilo":
-    st.title("STATO OPERATIVO")
-    st.markdown(f"#### LIVELLO REP: {data['stats']['rep']['level']}")
-    st.write("---")
+    st.title("Stato Operativo")
 
-    st.markdown("### STATISTICHE")
+    rep_level = data['stats']['rep']['level']
+    st.markdown(
+        f"<div style='display:flex; justify-content:center; margin: 10px 0 28px 0;'>"
+        f"{medaglione_html(rep_level, 0, 1, 'Reputazione', hero=True)}"
+        f"</div>",
+        unsafe_allow_html=True
+    )
+
+    st.markdown("### Statistiche")
     m_stats = data.get("mission_stats", {"totale": 0, "urgenti": 0, "grossi": 0, "lavoretti": 0})
 
     st.markdown(f"""
@@ -669,138 +773,52 @@ elif st.session_state.active_tab == "profilo":
         </div>
     """, unsafe_allow_html=True)
 
-    st.write("---")
-
-    st.markdown("### PARAMETRI VITALI")
-    for stat in ["disciplina", "focus", "skill"]:
+    st.markdown("### Parametri Vitali")
+    medaglioni_html = "<div class='medallions-row'>"
+    for stat, label in [("disciplina", "Disciplina"), ("focus", "Focus"), ("skill", "Skill")]:
         info = data["stats"].get(stat, {"xp": 0, "level": 1, "last_active": str(date.today())})
         livello_attuale = info.get("level", 1)
         xp_attuali = info.get("xp", 0)
         prossimo_livello = 100 * livello_attuale
+        medaglioni_html += medaglione_html(livello_attuale, xp_attuali, prossimo_livello, label)
+    medaglioni_html += "</div>"
+    st.markdown(medaglioni_html, unsafe_allow_html=True)
 
-        st.markdown(f"**{stat.upper()}** — Livello {livello_attuale}")
-        st.progress(min(1.0, xp_attuali / prossimo_livello))
-        st.caption(f"Esperienza: {xp_attuali}/{prossimo_livello} XP")
-        st.write("")
-
-    st.write("---")
-    st.markdown("### TRAGUARDI")
-    streak = data.get("bar_streak", 0)
+    st.markdown("### Traguardi")
     badge_list = [
         {"nome": "Efficienza Fiscale", "desc": "Risolvi 3 scadenze urgenti.", "sbloccato": m_stats.get("urgenti", 0) >= 3},
         {"nome": "Inarrestabile", "desc": "Porta a termine 10 task totali.", "sbloccato": m_stats.get("totale", 0) >= 10},
-        {"nome": "Fondo Solido", "desc": "5 giorni consecutivi senza spese accessorie.", "sbloccato": streak >= 5},
-        {"nome": "Ascetismo Finanziario", "desc": "14 giorni consecutivi senza micro-spese.", "sbloccato": streak >= 14},
     ]
 
     for b in badge_list:
-        if b["sbloccato"]:
-            st.markdown(f"<div class='badge-unlocked'><b>{b['nome']}</b><br><span style='color:#CCCCCC;'>{b['desc']}</span></div>", unsafe_allow_html=True)
-        else:
-            st.markdown(f"<div class='badge-locked'><b>{b['nome']}</b><br><span style='color:#888888;'>{b['desc']}</span></div>", unsafe_allow_html=True)
+        css_class = "badge-unlocked" if b["sbloccato"] else "badge-locked"
+        colore_desc = "#C9BFA6" if b["sbloccato"] else "#6E675A"
+        st.markdown(
+            f"<div class='{css_class}'><b>{b['nome']}</b><br>"
+            f"<span style='color:{colore_desc};'>{b['desc']}</span></div>",
+            unsafe_allow_html=True
+        )
 
-    st.write("---")
-    st.markdown("### 📂 STORICO MISSIONI COMPLETATE")
+    st.markdown("### Storico Missioni Completate")
     completati = [t for t in data.get("tasks", []) if t.get("completato", False)]
     if not completati:
         st.caption("Nessuna missione completata di recente.")
     else:
         for t in reversed(completati[-10:]):
-            st.markdown(f"✅ ~~{t.get('titolo')}~~ `({t.get('stat', 'base').upper()})`")
+            st.markdown(
+                f"<div class='history-row'>{t.get('titolo')} "
+                f"<span class='tag'>{t.get('stat', 'base').upper()}</span></div>",
+                unsafe_allow_html=True
+            )
 
-# --- RENDER TAB: GARAGE (GESTIONE FONDI) ---
-elif st.session_state.active_tab == "garage":
-    st.title("GESTIONE FONDI")
-    st.write("---")
-
-    st.markdown("### CONTROLLO SPESE (DAILY CHECK)")
-    today_str = str(date.today())
-    last_check = data.get("last_bar_check", "")
-
-    if last_check != today_str:
-        st.info("Hai evitato spese superflue (es. bar) oggi?")
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("NESSUNA SPESA"):
-                data["bar_streak"] += 1
-                data["last_bar_check"] = today_str
-                save_data(data)
-                aggiungi_xp("disciplina", 15)
-                st.rerun()
-        with col2:
-            if st.button("SPESA EFFETTUATA"):
-                data["bar_streak"] = 0
-                data["last_bar_check"] = today_str
-                save_data(data)
-                st.rerun()
-    else:
-        st.markdown(f"**Scia virtuosa attuale:** `{data['bar_streak']} giorni consecutivi`")
-
-    st.write("---")
-    st.markdown("### OBIETTIVI FINANZIARI")
-
-    if "show_garage_form" not in st.session_state:
-        st.session_state.show_garage_form = False
-
-    col_g_title, col_g_btn = st.columns([8, 2])
-    with col_g_btn:
-        st.markdown('<div class="btn-minimal">', unsafe_allow_html=True)
-        if st.button("ADD TARGET", key="toggle_garage", use_container_width=True):
-            st.session_state.show_garage_form = not st.session_state.show_garage_form
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    if st.session_state.show_garage_form:
-        with st.form("new_garage_item"):
-            col_g1, col_g2 = st.columns([2, 1])
-            with col_g1:
-                oggetto = st.text_input("Descrizione Obiettivo:")
-            with col_g2:
-                costo = st.number_input("Target Budget (€):", min_value=1)
-            submit_item = st.form_submit_button("AGGIUNGI OBIETTIVO")
-            if submit_item and oggetto and costo:
-                data["garage"].append({
-                    "oggetto": oggetto, "costo": costo, "risparmiati": 0
-                })
-                save_data(data)
-                st.session_state.show_garage_form = False
-                st.success("Obiettivo aggiunto!")
-                st.rerun()
-
-    if not data["garage"]:
-        st.info("Nessun obiettivo di risparmio impostato.")
-    else:
-        for idx, item in enumerate(data["garage"]):
-            costo_tot = item["costo"]
-            risp = item["risparmiati"]
-            percentuale = min(1.0, risp / costo_tot)
-
-            st.markdown(f"##### {item['oggetto']} — {risp}€ / {costo_tot}€")
-            st.progress(percentuale)
-
-            col_dep1, col_dep2 = st.columns([2, 1])
-            with col_dep1:
-                deposito = st.number_input("Importo da allocare (€):", min_value=1, key=f"dep_val_{idx}")
-            with col_dep2:
-                st.write("")
-                if st.button("ALLOCA FONDI", key=f"dep_btn_{idx}"):
-                    item["risparmiati"] += deposito
-                    save_data(data)
-                    if item["risparmiati"] >= item["costo"]:
-                        aggiungi_xp("skill", 100)
-                    else:
-                        aggiungi_xp("skill", 10)
-                    st.rerun()
-            st.write("---")
-
-# --- BARRA DI NAVIGAZIONE INFERIORE FISSA CON STATO ATTIVO ---
+# --- BARRA DI NAVIGAZIONE INFERIORE ---
 st.markdown('<div class="fixed-bottom-nav"><div class="fixed-bottom-inner">', unsafe_allow_html=True)
-nav_col1, nav_col2, nav_col3 = st.columns(3)
+nav_col1, nav_col2 = st.columns(2)
 
 with nav_col1:
     class_b = "nav-active" if st.session_state.active_tab == "bacheca" else ""
     st.markdown(f'<div class="{class_b}">', unsafe_allow_html=True)
-    if st.button("📋", use_container_width=True, key="nav_bacheca"):
+    if st.button("Radar", use_container_width=True, key="nav_bacheca"):
         st.session_state.active_tab = "bacheca"
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
@@ -808,16 +826,8 @@ with nav_col1:
 with nav_col2:
     class_p = "nav-active" if st.session_state.active_tab == "profilo" else ""
     st.markdown(f'<div class="{class_p}">', unsafe_allow_html=True)
-    if st.button("📊", use_container_width=True, key="nav_profilo"):
+    if st.button("Stato", use_container_width=True, key="nav_profilo"):
         st.session_state.active_tab = "profilo"
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with nav_col3:
-    class_g = "nav-active" if st.session_state.active_tab == "garage" else ""
-    st.markdown(f'<div class="{class_g}">', unsafe_allow_html=True)
-    if st.button("🚗", use_container_width=True, key="nav_garage"):
-        st.session_state.active_tab = "garage"
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
