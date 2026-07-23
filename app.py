@@ -10,8 +10,15 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-BIN_ID = "6a6062a5f5f4af5e29af85cd"
-API_KEY = "$2a$10$HG2ozmdWbzNBc5DhTzel5.aNV0Z3UckB1adx8MbSDki6hUZxRFnIi"
+# --- CONFIGURAZIONE CREDENZIALI (Usa st.secrets per sicurezza) ---
+try:
+    BIN_ID = st.secrets["jsonbin"]["bin_id"]
+    API_KEY = st.secrets["jsonbin"]["api_key"]
+except Exception:
+    # Fallback di sicurezza (sostituisci o configura .streamlit/secrets.toml)
+    BIN_ID = "6a6062a5f5f4af5e29af85cd"
+    API_KEY = "$2a$10$HG2ozmdWbzNBc5DhTzel5.aNV0Z3UckB1adx8MbSDki6hUZxRFnIi"
+
 URL = f"https://api.jsonbin.io/v3/b/{BIN_ID}"
 HEADERS = {
     "X-Master-Key": API_KEY,
@@ -30,7 +37,7 @@ st.markdown("""
     .stApp {
         background: linear-gradient(135deg, #0B0B1A 0%, #1A0B2E 50%, #0B1120 100%) !important;
         background-attachment: fixed !important;
-        padding-bottom: 110px !important; /* Spazio per non coprire i contenuti con la barra in basso */
+        padding-bottom: 110px !important;
     }
     
     section[data-testid="stSidebar"] {
@@ -83,10 +90,12 @@ st.markdown("""
         transform: translateY(-2px);
     }
     
-    div.stButton > button:active {
-        transform: translateY(0px);
+    /* Stile personalizzato per i pulsanti di navigazione attivi */
+    .nav-active > div > button {
+        background: linear-gradient(45deg, #00FFFF, #0088FF) !important;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.6) !important;
     }
-    
+
     .btn-minimal > div > button {
         padding: 0.4rem 1rem !important;
         font-size: 0.9rem !important;
@@ -125,7 +134,6 @@ st.markdown("""
         margin-top: 4px;
     }
 
-    /* Barra di Navigazione Inferiore Fissa (Stile Instagram) */
     .fixed-bottom-nav {
         position: fixed;
         bottom: 0;
@@ -189,10 +197,6 @@ st.markdown("""
         box-shadow: 0 0 10px rgba(0, 255, 255, 0.4) !important;
     }
     
-    .stCheckbox > label {
-        padding: 8px 0;
-    }
-    
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 </style>
@@ -216,7 +220,7 @@ def load_data():
     try:
         req = requests.get(URL, headers=HEADERS)
         if req.status_code == 200:
-            db = req.json()["record"]
+            db = req.json().get("record", default_data)
             if "garage" not in db: db["garage"] = []
             if "bar_streak" not in db: db["bar_streak"] = 0
             if "last_bar_check" not in db: db["last_bar_check"] = str(date.today())
@@ -231,7 +235,7 @@ def load_data():
 def save_data(data):
     try:
         requests.put(URL, json=data, headers=HEADERS)
-    except Exception as e:
+    except Exception:
         pass
 
 data = load_data()
@@ -298,8 +302,7 @@ if "show_mission_form" not in st.session_state:
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = "bacheca"
 
-# --- RENDER CONTENUTI A SECONDA DELLA TAB ATTIVA ---
-
+# --- RENDER TAB: BACHECA ---
 if st.session_state.active_tab == "bacheca":
     col_title, col_btn = st.columns([8, 2])
     with col_title:
@@ -352,7 +355,7 @@ if st.session_state.active_tab == "bacheca":
                 data["tasks"].append(nuova_missione)
                 save_data(data)
                 st.session_state.show_mission_form = False
-                st.toast(f"Task registrato: {titolo}")
+                st.success(f"Task registrato con successo!")
                 st.rerun()
 
     all_tasks = data.get("tasks", [])
@@ -410,6 +413,7 @@ if st.session_state.active_tab == "bacheca":
                 st.toast(f"Task completato (+{xp_reward} XP in {t_stat.upper()})")
                 st.rerun()
 
+# --- RENDER TAB: PROFILO ---
 elif st.session_state.active_tab == "profilo":
     st.title("STATO OPERATIVO")
     st.markdown(f"#### LIVELLO REP: {data['stats']['rep']['level']}")
@@ -469,6 +473,16 @@ elif st.session_state.active_tab == "profilo":
         else:
             st.markdown(f"<div class='badge-locked'><b>{b['nome']}</b><br><span style='color:#888888;'>{b['desc']}</span></div>", unsafe_allow_html=True)
 
+    st.write("---")
+    st.markdown("### 📂 STORICO MISSIONI COMPLETATE")
+    completati = [t for t in data.get("tasks", []) if t.get("completato", False)]
+    if not completati:
+        st.caption("Nessuna missione completata di recente.")
+    else:
+        for t in reversed(completati[-10:]):  # Mostra gli ultimi 10
+            st.markdown(f"✅ ~~{t.get('titolo')}~~ `({t.get('stat', 'base').upper()})`")
+
+# --- RENDER TAB: GARAGE (GESTIONE FONDI) ---
 elif st.session_state.active_tab == "garage":
     st.title("GESTIONE FONDI")
     st.write("---")
@@ -524,6 +538,7 @@ elif st.session_state.active_tab == "garage":
                 })
                 save_data(data)
                 st.session_state.show_garage_form = False
+                st.success("Obiettivo aggiunto!")
                 st.rerun()
                 
     if not data["garage"]:
@@ -552,23 +567,32 @@ elif st.session_state.active_tab == "garage":
                     st.rerun()
             st.write("---")
 
-# --- BARRA DI NAVIGAZIONE INFERIORE FISSA (STILE INSTAGRAM) ---
+# --- BARRA DI NAVIGAZIONE INFERIORE FISSA CON STATO ATTIVO ---
 st.markdown('<div class="fixed-bottom-nav"><div class="fixed-bottom-inner">', unsafe_allow_html=True)
 nav_col1, nav_col2, nav_col3 = st.columns(3)
 
 with nav_col1:
+    class_b = "nav-active" if st.session_state.active_tab == "bacheca" else ""
+    st.markdown(f'<div class="{class_b}">', unsafe_allow_html=True)
     if st.button("📋", use_container_width=True, key="nav_bacheca"):
         st.session_state.active_tab = "bacheca"
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with nav_col2:
+    class_p = "nav-active" if st.session_state.active_tab == "profilo" else ""
+    st.markdown(f'<div class="{class_p}">', unsafe_allow_html=True)
     if st.button("📊", use_container_width=True, key="nav_profilo"):
         st.session_state.active_tab = "profilo"
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with nav_col3:
+    class_g = "nav-active" if st.session_state.active_tab == "garage" else ""
+    st.markdown(f'<div class="{class_g}">', unsafe_allow_html=True)
     if st.button("🚗", use_container_width=True, key="nav_garage"):
         st.session_state.active_tab = "garage"
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown('</div></div>', unsafe_allow_html=True)
