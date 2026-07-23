@@ -52,7 +52,6 @@ st.markdown("""
         color: var(--ivory) !important;
     }
 
-    /* --- SFONDO: espresso caldo, vignette naturale, quasi immobile --- */
     .stApp {
         background:
             radial-gradient(circle at 22% -10%, rgba(201, 162, 39, 0.07), transparent 55%),
@@ -101,12 +100,10 @@ st.markdown("""
         color: var(--ivory) !important;
     }
 
-    /* --- NUMERI E DATI IN MONOSPACE --- */
     .num, .medallion-level, .medallion-xp, .stat-value {
         font-family: 'IBM Plex Mono', monospace !important;
     }
 
-    /* --- PANNELLI / FORM --- */
     div[data-testid="stForm"], .card-panel {
         background: var(--panel) !important;
         border-radius: 14px !important;
@@ -116,7 +113,6 @@ st.markdown("""
         margin-bottom: 20px;
     }
 
-    /* --- TASK CARD --- */
     .task-card {
         background: var(--panel);
         border-radius: 14px;
@@ -170,7 +166,6 @@ st.markdown("""
         margin: 2px 0 4px 0;
     }
 
-    /* --- BOTTONI --- */
     div.stButton > button, div.stFormSubmitButton > button {
         background: linear-gradient(160deg, var(--brass), var(--brass-dim)) !important;
         color: var(--ink) !important;
@@ -220,7 +215,6 @@ st.markdown("""
         text-align: left !important;
     }
 
-    /* --- MENU AZIONI SULLA TASK (popover a tendina) --- */
     .task-menu {
         display: flex;
         justify-content: flex-end;
@@ -257,7 +251,6 @@ st.markdown("""
         padding: 0.4rem 0.5rem !important;
     }
 
-    /* --- STAT BOX (Profilo) --- */
     .stats-container {
         display: flex;
         gap: 10px;
@@ -288,7 +281,6 @@ st.markdown("""
         margin-top: 4px;
     }
 
-    /* --- MEDAGLIONI CIRCOLARI DI LIVELLO --- */
     .medallions-row {
         display: flex;
         justify-content: space-around;
@@ -353,7 +345,6 @@ st.markdown("""
     .medallion-hero .medallion-ring { width: 140px; height: 140px; }
     .medallion-hero .medallion-level { font-size: 2.3rem; }
 
-    /* --- BADGE / TRAGUARDI --- */
     .badge-unlocked {
         padding: 16px 20px;
         background: rgba(201, 162, 39, 0.06);
@@ -377,7 +368,6 @@ st.markdown("""
         font-weight: 600;
     }
 
-    /* --- PROGRESS BAR --- */
     div[data-testid="stProgress"] > div > div > div > div {
         background: var(--brass) !important;
         border-radius: 8px;
@@ -387,7 +377,6 @@ st.markdown("""
         border-radius: 8px;
     }
 
-    /* --- INPUT --- */
     .stTextInput input, .stSelectbox div div, .stNumberInput input {
         background: var(--panel-soft) !important;
         color: var(--ivory) !important;
@@ -402,7 +391,6 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* --- STORICO --- */
     .history-row {
         font-family: 'Inter', sans-serif;
         color: var(--muted);
@@ -417,7 +405,6 @@ st.markdown("""
         margin-left: 6px;
     }
 
-    /* --- NAVIGAZIONE INFERIORE --- */
     .fixed-bottom-nav {
         position: fixed;
         bottom: 0;
@@ -489,13 +476,8 @@ def load_data():
             if "stats" not in db: db["stats"] = default_data["stats"]
             return db
         else:
-            st.warning(f"Connessione a JSONBin non riuscita (codice {req.status_code}). Uso dati vuoti temporanei.")
             return default_data
-    except requests.exceptions.Timeout:
-        st.warning("JSONBin non ha risposto in tempo. Uso dati vuoti temporanei.")
-        return default_data
-    except Exception as e:
-        st.warning(f"Errore di connessione a JSONBin: {e}. Uso dati vuoti temporanei.")
+    except Exception:
         return default_data
 
 
@@ -606,7 +588,6 @@ if st.session_state.active_tab == "bacheca":
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # Form di Inserimento Missione
     if st.session_state.show_mission_form:
         with st.form("new_mission_form", clear_on_submit=True):
             st.markdown("**Nuova missione operativa**")
@@ -817,9 +798,96 @@ elif st.session_state.active_tab == "profilo":
                 unsafe_allow_html=True
             )
 
-# --- BARRA DI NAVIGAZIONE INFERIORE ---
+# --- RENDER TAB: GARAGE (GESTIONE FONDI) ---
+elif st.session_state.active_tab == "garage":
+    st.title("Gestione Fondi")
+    st.write("---")
+    
+    st.markdown("### Controllo Spese (Daily Check)")
+    today_str = str(date.today())
+    last_check = data.get("last_bar_check", "")
+    
+    if last_check != today_str:
+        st.info("Hai evitato spese superflue oggi?")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Nessuna spesa"):
+                data["bar_streak"] += 1
+                data["last_bar_check"] = today_str
+                save_data(data)
+                aggiungi_xp("disciplina", 15)
+                st.rerun()
+        with col2:
+            if st.button("Spesa effettuata"):
+                data["bar_streak"] = 0
+                data["last_bar_check"] = today_str
+                save_data(data)
+                st.rerun()
+    else:
+        st.markdown(f"**Scia virtuosa attuale:** `{data['bar_streak']} giorni consecutivi`")
+        
+    st.write("---")
+    st.markdown("### Obiettivi Finanziari")
+    
+    if "show_garage_form" not in st.session_state:
+        st.session_state.show_garage_form = False
+        
+    col_g_title, col_g_btn = st.columns([8, 3])
+    with col_g_btn:
+        st.markdown('<div class="btn-ghost">', unsafe_allow_html=True)
+        if st.button("+ Obiettivo", key="toggle_garage", use_container_width=True):
+            st.session_state.show_garage_form = not st.session_state.show_garage_form
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    if st.session_state.show_garage_form:
+        with st.form("new_garage_item"):
+            col_g1, col_g2 = st.columns([2, 1])
+            with col_g1:
+                oggetto = st.text_input("Descrizione Obiettivo:")
+            with col_g2:
+                costo = st.number_input("Target Budget (€):", min_value=1)
+            submit_item = st.form_submit_button("Aggiungi obiettivo")
+            if submit_item and oggetto and costo:
+                if "garage" not in data:
+                    data["garage"] = []
+                data["garage"].append({
+                    "oggetto": oggetto, "costo": costo, "risparmiati": 0
+                })
+                save_data(data)
+                st.session_state.show_garage_form = False
+                st.success("Obiettivo aggiunto!")
+                st.rerun()
+                
+    if not data.get("garage"):
+        st.info("Nessun obiettivo di risparmio impostato.")
+    else:
+        for idx, item in enumerate(data["garage"]):
+            costo_tot = item["costo"]
+            risp = item["risparmiati"]
+            percentuale = min(1.0, risp / costo_tot)
+            
+            st.markdown(f"##### {item['oggetto']} — {risp}€ / {costo_tot}€")
+            st.progress(percentuale)
+            
+            col_dep1, col_dep2 = st.columns([2, 1])
+            with col_dep1:
+                deposito = st.number_input("Importo da allocare (€):", min_value=1, key=f"dep_val_{idx}")
+            with col_dep2:
+                st.write("") 
+                if st.button("Alloca fondi", key=f"dep_btn_{idx}"):
+                    item["risparmiati"] += deposito
+                    save_data(data)
+                    if item["risparmiati"] >= item["costo"]:
+                        aggiungi_xp("skill", 100)
+                    else:
+                        aggiungi_xp("skill", 10)
+                    st.rerun()
+            st.write("---")
+
+# --- BARRA DI NAVIGAZIONE INFERIORE (3 TASTI RIPRISTINATI) ---
 st.markdown('<div class="fixed-bottom-nav"><div class="fixed-bottom-inner">', unsafe_allow_html=True)
-nav_col1, nav_col2 = st.columns(2)
+nav_col1, nav_col2, nav_col3 = st.columns(3)
 
 with nav_col1:
     class_b = "nav-active" if st.session_state.active_tab == "bacheca" else ""
@@ -834,6 +902,14 @@ with nav_col2:
     st.markdown(f'<div class="{class_p}">', unsafe_allow_html=True)
     if st.button("Stato", use_container_width=True, key="nav_profilo"):
         st.session_state.active_tab = "profilo"
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+with nav_col3:
+    class_g = "nav-active" if st.session_state.active_tab == "garage" else ""
+    st.markdown(f'<div class="{class_g}">', unsafe_allow_html=True)
+    if st.button("Fondi", use_container_width=True, key="nav_garage"):
+        st.session_state.active_tab = "garage"
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
