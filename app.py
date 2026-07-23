@@ -15,7 +15,6 @@ try:
     BIN_ID = st.secrets["jsonbin"]["bin_id"]
     API_KEY = st.secrets["jsonbin"]["api_key"]
 except Exception:
-    # Fallback di sicurezza (sostituisci o configura .streamlit/secrets.toml)
     BIN_ID = "6a6062a5f5f4af5e29af85cd"
     API_KEY = "$2a$10$HG2ozmdWbzNBc5DhTzel5.aNV0Z3UckB1adx8MbSDki6hUZxRFnIi"
 
@@ -90,7 +89,6 @@ st.markdown("""
         transform: translateY(-2px);
     }
     
-    /* Stile personalizzato per i pulsanti di navigazione attivi */
     .nav-active > div > button {
         background: linear-gradient(45deg, #00FFFF, #0088FF) !important;
         box-shadow: 0 0 20px rgba(0, 255, 255, 0.6) !important;
@@ -100,6 +98,11 @@ st.markdown("""
         padding: 0.4rem 1rem !important;
         font-size: 0.9rem !important;
         border-radius: 12px !important;
+    }
+    
+    .btn-danger > div > button {
+        background: linear-gradient(45deg, #FF3333, #990000) !important;
+        box-shadow: 0 0 10px rgba(255, 0, 0, 0.4) !important;
     }
 
     .stats-container {
@@ -181,6 +184,15 @@ st.markdown("""
         border: 1px solid rgba(255, 255, 255, 0.05);
         margin-bottom: 16px;
         opacity: 0.4;
+    }
+    
+    .alert-box {
+        background: rgba(255, 51, 102, 0.15);
+        border: 1px solid #FF3366;
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 20px;
+        box-shadow: 0 0 15px rgba(255, 51, 102, 0.2);
     }
     
     .stTextInput input, .stSelectbox div div, .stNumberInput input {
@@ -302,7 +314,7 @@ if "show_mission_form" not in st.session_state:
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = "bacheca"
 
-# --- RENDER TAB: BACHECA ---
+# --- RENDER TAB: BACHECA (RADAR OPERATIVO) ---
 if st.session_state.active_tab == "bacheca":
     col_title, col_btn = st.columns([8, 2])
     with col_title:
@@ -319,8 +331,10 @@ if st.session_state.active_tab == "bacheca":
         
     st.write("---")
 
+    # Form di Inserimento Missione con Anteprima XP
     if st.session_state.show_mission_form:
         with st.form("new_mission_form", clear_on_submit=True):
+            st.markdown("**NUOVA MISSIONE OPERATIVA**")
             titolo = st.text_input("Descrizione Task")
             col_f1, col_f2 = st.columns(2)
             with col_f1:
@@ -340,12 +354,16 @@ if st.session_state.active_tab == "bacheca":
             scadenza = None
             if "URGENTE" in tipo:
                 scadenza = st.date_input("Scadenza inderogabile:", min_value=date.today())
+            
+            # Anteprima dinamica ricompensa
+            xp_anteprima = 40 if "URGENTE" in tipo else (30 if "Priorità" in tipo else 15)
+            st.caption(f"Ricompensa stimata: `{xp_anteprima} XP` nell'area `{stat_clean.upper()}`")
                 
             submit = st.form_submit_button("INSERISCI A SISTEMA")
             
             if submit and titolo:
                 nuova_missione = {
-                    "id": len(data.get("tasks", [])) + 1,
+                    "id": max([t.get("id", 0) for t in data.get("tasks", [])], default=0) + 1,
                     "titolo": titolo,
                     "tipo": tipo,
                     "stat": stat_clean,
@@ -355,7 +373,7 @@ if st.session_state.active_tab == "bacheca":
                 data["tasks"].append(nuova_missione)
                 save_data(data)
                 st.session_state.show_mission_form = False
-                st.success(f"Task registrato con successo!")
+                st.success("Task registrato nel radar!")
                 st.rerun()
 
     all_tasks = data.get("tasks", [])
@@ -364,35 +382,92 @@ if st.session_state.active_tab == "bacheca":
     if not attive:
         st.info("Nessun task in sospeso. Sistema allineato.")
     else:
-        scadenze = [t for t in attive if "URGENTE" in t.get("tipo", "")]
-        scadenze.sort(key=lambda x: x.get("scadenza") if x.get("scadenza") else "9999-12-31")
-        grossi = [t for t in attive if "Priorità" in t.get("tipo", "")]
-        lavoretti = [t for t in attive if "Routine" in t.get("tipo", "")]
-        lista_ordinata = scadenze + grossi + lavoretti
+        # --- FILTRI RAPIDI ---
+        col_filtro1, col_filtro2 = st.columns(2)
+        with col_filtro1:
+            filtro_tipo = st.selectbox("Filtra per Tipo:", ["Tutti", "Scadenze Urgenti", "Progetti", "Routine"], label_visibility="collapsed")
+        with col_filtro2:
+            filtro_area = st.selectbox("Filtra per Area:", ["Tutte le aree", "disciplina", "focus", "skill"], label_visibility="collapsed")
 
-        for task in lista_ordinata:
-            t_tipo = task.get("tipo", "Routine / Manutenzione (+15 XP)")
-            t_titolo = task.get("titolo", "Task")
+        # Applicazione filtri
+        task_filtrati = attive
+        if filtro_tipo == "Scadenze Urgenti":
+            task_filtrati = [t for t in task_filtrati if "URGENTE" in t.get("tipo", "")]
+        elif filtro_tipo == "Progetti":
+            task_filtrati = [t for t in task_filtrati if "Priorità" in t.get("tipo", "")]
+        elif filtro_tipo == "Routine":
+            task_filtrati = [t for t in task_filtrati if "Routine" in t.get("tipo", "")]
+
+        if filtro_area != "Tutte le aree":
+            task_filtrati = [t for t in task_filtrati if t.get("stat") == filtro_area]
+
+        # --- SEZIONE ALLERTA SCADUTE / IMMEDIATE ---
+        scadute_o_urgenti = []
+        altri_task = []
+        
+        for t in task_filtrati:
+            if "URGENTE" in t.get("tipo", "") and t.get("scadenza"):
+                try:
+                    scad_date = datetime.strptime(t.get("scadenza"), "%Y-%m-%d").date()
+                    if (scad_date - date.today()).days <= 1:
+                        scadute_o_urgenti.append(t)
+                        continue
+                except:
+                    pass
+            altri_task.append(t)
+
+        if scadute_o_urgenti:
+            st.markdown('<div class="alert-box">', unsafe_allow_html=True)
+            st.markdown("🚨 **ALLERT RADAR: SCADENZE CRITICHE**")
+            for task in scadute_o_urgenti:
+                t_id = task.get("id")
+                t_titolo = task.get("titolo")
+                t_stat = task.get("stat", "disciplina")
+                try:
+                    giorni = (datetime.strptime(task.get("scadenza"), "%Y-%m-%d").date() - date.today()).days
+                    lbl = "[SCADUTA]" if giorni < 0 else "[SCADE OGGI/DOMANI]"
+                except:
+                    lbl = "[URGENTE]"
+                
+                col_c1, col_c2 = st.columns([5, 1])
+                with col_c1:
+                    if st.checkbox(f"{lbl} {t_titolo}", key=f"crit_{t_id}"):
+                        for item in data["tasks"]:
+                            if item.get("id") == t_id:
+                                item["completato"] = True
+                        data["mission_stats"]["totale"] = data["mission_stats"].get("totale", 0) + 1
+                        data["mission_stats"]["urgenti"] = data["mission_stats"].get("urgenti", 0) + 1
+                        save_data(data)
+                        aggiungi_xp(t_stat, 40)
+                        st.toast(f"Task critico completato (+40 XP in {t_stat.upper()})")
+                        st.rerun()
+                with col_c2:
+                    st.markdown('<div class="btn-minimal btn-danger">', unsafe_allow_html=True)
+                    if st.button("🗑️", key=f"del_crit_{t_id}"):
+                        data["tasks"] = [item for item in data["tasks"] if item.get("id") != t_id]
+                        save_data(data)
+                        st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        # --- LISTA TASK STANDARD ---
+        for task in altri_task:
+            t_tipo = task.get("tipo", "")
+            t_titolo = task.get("titolo", "")
             t_scadenza = task.get("scadenza")
             t_id = task.get("id", 0)
             t_stat = task.get("stat", "disciplina")
             
             if "URGENTE" in t_tipo and t_scadenza:
                 try:
-                    scad_date = datetime.strptime(t_scadenza, "%Y-%m-%d").date()
-                    giorni_rimasti = (scad_date - date.today()).days
-                    if giorni_rimasti <= 0:
-                        label = f"[SCADUTA] — {t_titolo}"
-                    elif giorni_rimasti == 1:
-                        label = f"[SCADE DOMANI] — {t_titolo}"
-                    else:
-                        label = f"[{giorni_rimasti} GG RIMASTI] — {t_titolo}"
+                    giorni_rimasti = (datetime.strptime(t_scadenza, "%Y-%m-%d").date() - date.today()).days
+                    label = f"[{giorni_rimasti} GG] — {t_titolo}"
                 except:
                     label = f"[URGENTE] — {t_titolo}"
                 xp_reward = 40
                 categoria_stat = "urgenti"
             elif "Priorità" in t_tipo:
-                label = f"[PRIORITÀ] — {t_titolo}"
+                label = f"[PROGETTO] — {t_titolo}"
                 xp_reward = 30
                 categoria_stat = "grossi"
             else:
@@ -400,18 +475,25 @@ if st.session_state.active_tab == "bacheca":
                 xp_reward = 15
                 categoria_stat = "lavoretti"
                 
-            if st.checkbox(label, key=f"task_{t_id}"):
-                for t in data["tasks"]:
-                    if t.get("id") == t_id:
-                        t["completato"] = True
-                
-                data["mission_stats"]["totale"] = data["mission_stats"].get("totale", 0) + 1
-                data["mission_stats"][categoria_stat] = data["mission_stats"].get(categoria_stat, 0) + 1
-                
-                save_data(data)
-                aggiungi_xp(t_stat, xp_reward)
-                st.toast(f"Task completato (+{xp_reward} XP in {t_stat.upper()})")
-                st.rerun()
+            col_t1, col_t2 = st.columns([5, 1])
+            with col_t1:
+                if st.checkbox(label, key=f"task_{t_id}"):
+                    for t in data["tasks"]:
+                        if t.get("id") == t_id:
+                            t["completato"] = True
+                    data["mission_stats"]["totale"] = data["mission_stats"].get("totale", 0) + 1
+                    data["mission_stats"][categoria_stat] = data["mission_stats"].get(categoria_stat, 0) + 1
+                    save_data(data)
+                    aggiungi_xp(t_stat, xp_reward)
+                    st.toast(f"Task completato (+{xp_reward} XP in {t_stat.upper()})")
+                    st.rerun()
+            with col_t2:
+                st.markdown('<div class="btn-minimal btn-danger">', unsafe_allow_html=True)
+                if st.button("🗑️", key=f"del_task_{t_id}"):
+                    data["tasks"] = [item for item in data["tasks"] if item.get("id") != t_id]
+                    save_data(data)
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
 
 # --- RENDER TAB: PROFILO ---
 elif st.session_state.active_tab == "profilo":
@@ -479,7 +561,7 @@ elif st.session_state.active_tab == "profilo":
     if not completati:
         st.caption("Nessuna missione completata di recente.")
     else:
-        for t in reversed(completati[-10:]):  # Mostra gli ultimi 10
+        for t in reversed(completati[-10:]):
             st.markdown(f"✅ ~~{t.get('titolo')}~~ `({t.get('stat', 'base').upper()})`")
 
 # --- RENDER TAB: GARAGE (GESTIONE FONDI) ---
