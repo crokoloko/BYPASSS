@@ -53,19 +53,16 @@ st.markdown("""
     }
 
     .stApp {
-        background:
-            radial-gradient(circle at 22% -10%, rgba(201, 162, 39, 0.07), transparent 55%),
-            radial-gradient(circle at 85% 105%, rgba(107, 143, 113, 0.05), transparent 55%),
-            var(--ink);
-        background-attachment: fixed !important;
-        padding-bottom: 118px !important;
-        position: relative;
+        background: #17140F !important;
+        min-height: 100vh !important;
+        padding-bottom: 120px !important;
     }
 
     .main .block-container {
         position: relative;
         z-index: 1;
         padding-top: 2rem;
+        max-width: 600px;
     }
 
     section[data-testid="stSidebar"] { display: none !important; }
@@ -80,7 +77,7 @@ st.markdown("""
     h1 {
         color: var(--brass) !important;
         font-weight: 700 !important;
-        font-size: 2.4rem !important;
+        font-size: 2.2rem !important;
         margin-bottom: 0.2rem !important;
         border-bottom: 1px solid rgba(201, 162, 39, 0.22);
         padding-bottom: 10px;
@@ -885,7 +882,7 @@ elif st.session_state.active_tab == "garage":
                     st.rerun()
             st.write("---")
 
-# --- BARRA DI NAVIGAZIONE INFERIORE (3 TASTI RIPRISTINATI) ---
+# --- BARRA DI NAVIGAZIONE INFERIORE ---
 st.markdown('<div class="fixed-bottom-nav"><div class="fixed-bottom-inner">', unsafe_allow_html=True)
 nav_col1, nav_col2, nav_col3 = st.columns(3)
 
