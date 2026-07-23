@@ -233,6 +233,49 @@ st.markdown("""
         box-shadow: 0 0 8px rgba(255, 0, 0, 0.25) !important;
     }
 
+    /* --- MENU A TENDINA COMPATTO SULLE TASK CARD --- */
+    .task-menu {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: -6px;
+    }
+
+    .task-menu div[data-testid="stPopover"] > button {
+        background: rgba(255, 255, 255, 0.06) !important;
+        color: #FFFFFF !important;
+        border: 1px solid rgba(255, 255, 255, 0.10) !important;
+        border-radius: 10px !important;
+        box-shadow: none !important;
+        font-weight: 700;
+        padding: 0.25rem 0.6rem !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        min-height: 0 !important;
+    }
+
+    .task-menu div[data-testid="stPopover"] > button:hover {
+        background: rgba(255, 255, 255, 0.12) !important;
+        box-shadow: none !important;
+        transform: none;
+    }
+
+    div[data-testid="stPopoverBody"] {
+        background: rgba(20, 12, 35, 0.92) !important;
+        backdrop-filter: blur(18px) saturate(150%) !important;
+        border-radius: 16px !important;
+        border: 1px solid rgba(255, 255, 255, 0.10) !important;
+        padding: 10px !important;
+        gap: 6px !important;
+    }
+
+    div[data-testid="stPopoverBody"] button {
+        text-transform: none !important;
+        letter-spacing: 0.2px !important;
+        font-size: 0.85rem !important;
+        padding: 0.45rem 0.8rem !important;
+        box-shadow: none !important;
+    }
+
     .stats-container {
         display: flex;
         gap: 10px;
@@ -280,7 +323,16 @@ st.markdown("""
         border-top: 1px solid rgba(255, 255, 255, 0.10);
         box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
         z-index: 999999;
-        padding: 12px 0;
+        padding: 8px 0;
+    }
+
+    .fixed-bottom-nav div.stButton > button {
+        box-shadow: none !important;
+        padding: 0.4rem 0 !important;
+    }
+
+    .fixed-bottom-nav .nav-active > div > button {
+        box-shadow: 0 0 14px rgba(0, 255, 255, 0.45) !important;
     }
 
     .fixed-bottom-inner {
@@ -563,26 +615,26 @@ if st.session_state.active_tab == "bacheca":
             st.markdown(f"<div style='font-size:0.7rem; color:#00FFFF; font-weight:700; letter-spacing:1px;'>{badge_text} • AREA: {t_stat.upper()} (+{xp_reward} XP)</div>", unsafe_allow_html=True)
             st.markdown(f"<div style='font-size:1.05rem; font-weight:600; color:#FFFFFF; margin: 4px 0;'>{t_titolo}</div>", unsafe_allow_html=True)
 
-            col_act1, col_act2 = st.columns([4, 1])
-            with col_act1:
-                st.markdown('<div class="btn-minimal">', unsafe_allow_html=True)
-                if st.button("COMPLETA TASK", key=f"comp_{t_id}", use_container_width=True):
-                    for item in data["tasks"]:
-                        if item.get("id") == t_id:
-                            item["completato"] = True
-                    data["mission_stats"]["totale"] = data["mission_stats"].get("totale", 0) + 1
-                    data["mission_stats"][cat_stat] = data["mission_stats"].get(cat_stat, 0) + 1
-                    save_data(data)
-                    aggiungi_xp(t_stat, xp_reward)
-                    st.toast(f"Missione completata (+{xp_reward} XP in {t_stat.upper()})")
-                    st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
-            with col_act2:
-                st.markdown('<div class="btn-minimal btn-danger">', unsafe_allow_html=True)
-                if st.button("🗑️", key=f"del_{t_id}", use_container_width=True):
-                    data["tasks"] = [item for item in data["tasks"] if item.get("id") != t_id]
-                    save_data(data)
-                    st.rerun()
+            col_spacer, col_menu = st.columns([5, 1])
+            with col_menu:
+                st.markdown('<div class="task-menu">', unsafe_allow_html=True)
+                with st.popover("⋮", use_container_width=True):
+                    if st.button("✅ Completa", key=f"comp_{t_id}", use_container_width=True):
+                        for item in data["tasks"]:
+                            if item.get("id") == t_id:
+                                item["completato"] = True
+                        data["mission_stats"]["totale"] = data["mission_stats"].get("totale", 0) + 1
+                        data["mission_stats"][cat_stat] = data["mission_stats"].get(cat_stat, 0) + 1
+                        save_data(data)
+                        aggiungi_xp(t_stat, xp_reward)
+                        st.toast(f"Missione completata (+{xp_reward} XP in {t_stat.upper()})")
+                        st.rerun()
+                    st.markdown('<div class="btn-danger">', unsafe_allow_html=True)
+                    if st.button("🗑️ Elimina", key=f"del_{t_id}", use_container_width=True):
+                        data["tasks"] = [item for item in data["tasks"] if item.get("id") != t_id]
+                        save_data(data)
+                        st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
 
             st.markdown('</div>', unsafe_allow_html=True)
