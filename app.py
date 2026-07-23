@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- CONFIGURAZIONE CREDENZIALI (Usa st.secrets per sicurezza) ---
+# --- CONFIGURAZIONE CREDENZIALI ---
 try:
     BIN_ID = st.secrets["jsonbin"]["bin_id"]
     API_KEY = st.secrets["jsonbin"]["api_key"]
@@ -68,13 +68,39 @@ st.markdown("""
         padding: 24px;
         margin-bottom: 24px;
     }
+    
+    .task-card {
+        background: rgba(255, 255, 255, 0.02);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 16px 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .task-card-urgent {
+        border-left: 5px solid #FF3366;
+        background: rgba(255, 51, 102, 0.04);
+    }
+    
+    .task-card-project {
+        border-left: 5px solid #FF9933;
+    }
+    
+    .task-card-routine {
+        border-left: 5px solid #00FFFF;
+    }
 
     div.stButton > button, div.stFormSubmitButton > button {
         background: linear-gradient(45deg, #FF3366, #FF9933) !important;
         color: #FFFFFF !important;
-        border-radius: 16px !important;
+        border-radius: 14px !important;
         border: none !important;
-        box-shadow: 0 0 15px rgba(255, 51, 102, 0.4) !important;
+        box-shadow: 0 0 12px rgba(255, 51, 102, 0.4) !important;
         font-family: 'Inter', sans-serif;
         font-weight: 600;
         text-transform: uppercase;
@@ -85,7 +111,7 @@ st.markdown("""
     
     div.stButton > button:hover, div.stFormSubmitButton > button:hover {
         background: linear-gradient(45deg, #FF9933, #FF3366) !important;
-        box-shadow: 0 0 25px rgba(255, 51, 102, 0.8) !important;
+        box-shadow: 0 0 20px rgba(255, 51, 102, 0.8) !important;
         transform: translateY(-2px);
     }
     
@@ -95,14 +121,14 @@ st.markdown("""
     }
 
     .btn-minimal > div > button {
-        padding: 0.4rem 1rem !important;
-        font-size: 0.9rem !important;
-        border-radius: 12px !important;
+        padding: 0.3rem 0.8rem !important;
+        font-size: 0.8rem !important;
+        border-radius: 10px !important;
     }
     
     .btn-danger > div > button {
         background: linear-gradient(45deg, #FF3333, #990000) !important;
-        box-shadow: 0 0 10px rgba(255, 0, 0, 0.4) !important;
+        box-shadow: 0 0 8px rgba(255, 0, 0, 0.3) !important;
     }
 
     .stats-container {
@@ -184,15 +210,6 @@ st.markdown("""
         border: 1px solid rgba(255, 255, 255, 0.05);
         margin-bottom: 16px;
         opacity: 0.4;
-    }
-    
-    .alert-box {
-        background: rgba(255, 51, 102, 0.15);
-        border: 1px solid #FF3366;
-        border-radius: 16px;
-        padding: 16px;
-        margin-bottom: 20px;
-        box-shadow: 0 0 15px rgba(255, 51, 102, 0.2);
     }
     
     .stTextInput input, .stSelectbox div div, .stNumberInput input {
@@ -331,7 +348,7 @@ if st.session_state.active_tab == "bacheca":
         
     st.write("---")
 
-    # Form di Inserimento Missione con Anteprima XP
+    # Form di Inserimento Missione
     if st.session_state.show_mission_form:
         with st.form("new_mission_form", clear_on_submit=True):
             st.markdown("**NUOVA MISSIONE OPERATIVA**")
@@ -355,7 +372,6 @@ if st.session_state.active_tab == "bacheca":
             if "URGENTE" in tipo:
                 scadenza = st.date_input("Scadenza inderogabile:", min_value=date.today())
             
-            # Anteprima dinamica ricompensa
             xp_anteprima = 40 if "URGENTE" in tipo else (30 if "Priorità" in tipo else 15)
             st.caption(f"Ricompensa stimata: `{xp_anteprima} XP` nell'area `{stat_clean.upper()}`")
                 
@@ -382,14 +398,13 @@ if st.session_state.active_tab == "bacheca":
     if not attive:
         st.info("Nessun task in sospeso. Sistema allineato.")
     else:
-        # --- FILTRI RAPIDI ---
-        col_filtro1, col_filtro2 = st.columns(2)
-        with col_filtro1:
-            filtro_tipo = st.selectbox("Filtra per Tipo:", ["Tutti", "Scadenze Urgenti", "Progetti", "Routine"], label_visibility="collapsed")
-        with col_filtro2:
-            filtro_area = st.selectbox("Filtra per Area:", ["Tutte le aree", "disciplina", "focus", "skill"], label_visibility="collapsed")
+        # Filtri rapidi puliti
+        col_f_a, col_f_b = st.columns(2)
+        with col_f_a:
+            filtro_tipo = st.selectbox("Filtra per Tipo:", ["Tutti", "Scadenze Urgenti", "Progetti", "Routine"])
+        with col_f_b:
+            filtro_area = st.selectbox("Filtra per Area:", ["Tutte le aree", "disciplina", "focus", "skill"])
 
-        # Applicazione filtri
         task_filtrati = attive
         if filtro_tipo == "Scadenze Urgenti":
             task_filtrati = [t for t in task_filtrati if "URGENTE" in t.get("tipo", "")]
@@ -401,99 +416,67 @@ if st.session_state.active_tab == "bacheca":
         if filtro_area != "Tutte le aree":
             task_filtrati = [t for t in task_filtrati if t.get("stat") == filtro_area]
 
-        # --- SEZIONE ALLERTA SCADUTE / IMMEDIATE ---
-        scadute_o_urgenti = []
-        altri_task = []
-        
-        for t in task_filtrati:
-            if "URGENTE" in t.get("tipo", "") and t.get("scadenza"):
-                try:
-                    scad_date = datetime.strptime(t.get("scadenza"), "%Y-%m-%d").date()
-                    if (scad_date - date.today()).days <= 1:
-                        scadute_o_urgenti.append(t)
-                        continue
-                except:
-                    pass
-            altri_task.append(t)
+        st.write("")
 
-        if scadute_o_urgenti:
-            st.markdown('<div class="alert-box">', unsafe_allow_html=True)
-            st.markdown("🚨 **ALLERT RADAR: SCADENZE CRITICHE**")
-            for task in scadute_o_urgenti:
-                t_id = task.get("id")
-                t_titolo = task.get("titolo")
-                t_stat = task.get("stat", "disciplina")
-                try:
-                    giorni = (datetime.strptime(task.get("scadenza"), "%Y-%m-%d").date() - date.today()).days
-                    lbl = "[SCADUTA]" if giorni < 0 else "[SCADE OGGI/DOMANI]"
-                except:
-                    lbl = "[URGENTE]"
-                
-                col_c1, col_c2 = st.columns([5, 1])
-                with col_c1:
-                    if st.checkbox(f"{lbl} {t_titolo}", key=f"crit_{t_id}"):
-                        for item in data["tasks"]:
-                            if item.get("id") == t_id:
-                                item["completato"] = True
-                        data["mission_stats"]["totale"] = data["mission_stats"].get("totale", 0) + 1
-                        data["mission_stats"]["urgenti"] = data["mission_stats"].get("urgenti", 0) + 1
-                        save_data(data)
-                        aggiungi_xp(t_stat, 40)
-                        st.toast(f"Task critico completato (+40 XP in {t_stat.upper()})")
-                        st.rerun()
-                with col_c2:
-                    st.markdown('<div class="btn-minimal btn-danger">', unsafe_allow_html=True)
-                    if st.button("🗑️", key=f"del_crit_{t_id}"):
-                        data["tasks"] = [item for item in data["tasks"] if item.get("id") != t_id]
-                        save_data(data)
-                        st.rerun()
-                    st.markdown('</div>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        # --- LISTA TASK STANDARD ---
-        for task in altri_task:
+        # Render delle Card Interattive per ogni task
+        for task in task_filtrati:
+            t_id = task.get("id")
+            t_titolo = task.get("titolo")
             t_tipo = task.get("tipo", "")
-            t_titolo = task.get("titolo", "")
-            t_scadenza = task.get("scadenza")
-            t_id = task.get("id", 0)
             t_stat = task.get("stat", "disciplina")
+            t_scadenza = task.get("scadenza")
             
-            if "URGENTE" in t_tipo and t_scadenza:
-                try:
-                    giorni_rimasti = (datetime.strptime(t_scadenza, "%Y-%m-%d").date() - date.today()).days
-                    label = f"[{giorni_rimasti} GG] — {t_titolo}"
-                except:
-                    label = f"[URGENTE] — {t_titolo}"
+            # Determinazione classe CSS e badge in base al tipo
+            if "URGENTE" in t_tipo:
+                card_class = "task-card task-card-urgent"
+                badge_text = "URGENTE"
                 xp_reward = 40
-                categoria_stat = "urgenti"
+                cat_stat = "urgenti"
+                if t_scadenza:
+                    try:
+                        giorni = (datetime.strptime(t_scadenza, "%Y-%m-%d").date() - date.today()).days
+                        badge_text = f"SCADUTA ({t_scadenza})" if giorni < 0 else f"SCADE TRA {giorni} GG"
+                    except:
+                        pass
             elif "Priorità" in t_tipo:
-                label = f"[PROGETTO] — {t_titolo}"
+                card_class = "task-card task-card-project"
+                badge_text = "PROGETTO"
                 xp_reward = 30
-                categoria_stat = "grossi"
+                cat_stat = "grossi"
             else:
-                label = f"[ROUTINE] — {t_titolo}"
+                card_class = "task-card task-card-routine"
+                badge_text = "ROUTINE"
                 xp_reward = 15
-                categoria_stat = "lavoretti"
-                
-            col_t1, col_t2 = st.columns([5, 1])
-            with col_t1:
-                if st.checkbox(label, key=f"task_{t_id}"):
-                    for t in data["tasks"]:
-                        if t.get("id") == t_id:
-                            t["completato"] = True
+                cat_stat = "lavoretti"
+
+            # Layout Card con Colonne per Pulsanti Azione (Completa / Elimina)
+            st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:0.7rem; color:#00FFFF; font-weight:700; letter-spacing:1px;'>{badge_text} • AREA: {t_stat.upper()} (+{xp_reward} XP)</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:1.05rem; font-weight:600; color:#FFFFFF; margin: 4px 0;'>{t_titolo}</div>", unsafe_allow_html=True)
+            
+            col_act1, col_act2 = st.columns([4, 1])
+            with col_act1:
+                st.markdown('<div class="btn-minimal">', unsafe_allow_html=True)
+                if st.button("COMPLETA TASK", key=f"comp_{t_id}", use_container_width=True):
+                    for item in data["tasks"]:
+                        if item.get("id") == t_id:
+                            item["completato"] = True
                     data["mission_stats"]["totale"] = data["mission_stats"].get("totale", 0) + 1
-                    data["mission_stats"][categoria_stat] = data["mission_stats"].get(categoria_stat, 0) + 1
+                    data["mission_stats"][cat_stat] = data["mission_stats"].get(cat_stat, 0) + 1
                     save_data(data)
                     aggiungi_xp(t_stat, xp_reward)
-                    st.toast(f"Task completato (+{xp_reward} XP in {t_stat.upper()})")
+                    st.toast(f"Missione completata (+{xp_reward} XP in {t_stat.upper()})")
                     st.rerun()
-            with col_t2:
+                st.markdown('</div>', unsafe_allow_html=True)
+            with col_act2:
                 st.markdown('<div class="btn-minimal btn-danger">', unsafe_allow_html=True)
-                if st.button("🗑️", key=f"del_task_{t_id}"):
+                if st.button("🗑️", key=f"del_{t_id}", use_container_width=True):
                     data["tasks"] = [item for item in data["tasks"] if item.get("id") != t_id]
                     save_data(data)
                     st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
+                
+            st.markdown('</div>', unsafe_allow_html=True)
 
 # --- RENDER TAB: PROFILO ---
 elif st.session_state.active_tab == "profilo":
